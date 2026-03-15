@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Data and weights
+data/
+weights/*.pt
+weights/*.pth
+weights/*.onnx
+!weights/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+wandb/
+runs/
+*.log
+
+# Results (tracked for project submission)
+!results/.gitkeep
+
+# Documentation / Presentation files (kept locally, not tracked)
+CLAUDE_CODE_PROMPT.md
+PRESENTATION_AND_SCRIPT.md
+SLIDE_CONTENT.md
+VIDEO_SCRIPT.md
+RESEARCH_REPORT.md
+presentation/
+
+# Virtual environment
+.venv/
