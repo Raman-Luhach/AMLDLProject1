@@ -9,7 +9,7 @@ build/
 *.egg
 
 # Data and weights
-data/
+/data/
 weights/*.pt
 weights/*.pth
 weights/*.onnx
