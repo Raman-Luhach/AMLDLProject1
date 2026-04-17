@@ -18,6 +18,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from src.models.cbam import CBAM
+
 
 class FPN(nn.Module):
     """Feature Pyramid Network for multi-scale feature fusion.
@@ -56,6 +58,11 @@ class FPN(nn.Module):
         self.smooth_p3 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
         self.smooth_p4 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
         self.smooth_p5 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+
+        # CBAM attention modules for P3, P4, P5 (applied after smoothing)
+        self.cbam_p3 = CBAM(out_channels, reduction=16, kernel_size=7)
+        self.cbam_p4 = CBAM(out_channels, reduction=16, kernel_size=7)
+        self.cbam_p5 = CBAM(out_channels, reduction=16, kernel_size=7)
 
         # Extra downsampling levels for small object detection
         self.downsample_p6 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=2, padding=1)
@@ -101,10 +108,10 @@ class FPN(nn.Module):
         # Upsample merged p4 to match lat_c3 spatial size
         p3 = lat_c3 + F.interpolate(p4, size=lat_c3.shape[2:], mode='bilinear', align_corners=False)
 
-        # Apply smoothing convolutions
-        p3 = self.smooth_p3(p3)
-        p4 = self.smooth_p4(p4)
-        p5 = self.smooth_p5(lat_c5)
+        # Apply smoothing convolutions + CBAM attention
+        p3 = self.cbam_p3(self.smooth_p3(p3))
+        p4 = self.cbam_p4(self.smooth_p4(p4))
+        p5 = self.cbam_p5(self.smooth_p5(lat_c5))
 
         # Extra downsampling levels from P5
         p6 = self.downsample_p6(p5)
