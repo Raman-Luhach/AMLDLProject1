@@ -6,7 +6,7 @@ dataset:
   data_dir: "data"
   num_classes: 1  # single class: "object"
   input_size: 550
-  train_subset: 1000  # use subset for faster training
+  train_subset: 3000  # use 3000 training images (36% of full dataset)
   num_workers: 4
   pin_memory: true
 
@@ -35,8 +35,8 @@ anchors:
   scales: [1.0, 1.26, 1.587]
 
 training:
-  epochs: 20
-  batch_size: 8
+  epochs: 8
+  batch_size: 4
   optimizer: "sgd"
   lr: 0.001
   momentum: 0.9
@@ -48,6 +48,10 @@ training:
   amp: true  # mixed precision
   val_interval: 2  # validate every N epochs
 
+augmentation:
+  mixup: true
+  mixup_alpha: 0.2
+
 loss:
   cls_weight: 1.0
   box_weight: 1.5
@@ -55,6 +59,7 @@ loss:
   focal_alpha: 0.25
   focal_gamma: 2.0
   neg_pos_ratio: 3
+  label_smoothing: 0.1
 
 softnms:
   method: "gaussian"

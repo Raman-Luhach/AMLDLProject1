@@ -44,11 +44,13 @@ class FocalLoss(nn.Module):
         alpha: float = 0.25,
         gamma: float = 2.0,
         num_classes: int = 2,
+        label_smoothing: float = 0.0,
     ) -> None:
         super().__init__()
         self.alpha = alpha
         self.gamma = gamma
         self.num_classes = num_classes
+        self.label_smoothing = label_smoothing
 
     def forward(
         self, predictions: torch.Tensor, targets: torch.Tensor
@@ -73,6 +75,13 @@ class FocalLoss(nn.Module):
         targets_one_hot = F.one_hot(
             targets, num_classes=self.num_classes
         ).float()  # (N, num_classes)
+
+        # Apply label smoothing
+        if self.label_smoothing > 0:
+            targets_one_hot = (
+                targets_one_hot * (1.0 - self.label_smoothing)
+                + self.label_smoothing / self.num_classes
+            )
 
         # Gather the probability of the true class: p_t
         p_t = (probs * targets_one_hot).sum(dim=-1)  # (N,)
@@ -166,6 +175,7 @@ class YOLACTLoss(nn.Module):
         focal_alpha: float = 0.25,
         focal_gamma: float = 2.0,
         neg_pos_ratio: int = 3,
+        label_smoothing: float = 0.0,
     ) -> None:
         super().__init__()
         self.num_classes = num_classes
@@ -176,10 +186,12 @@ class YOLACTLoss(nn.Module):
         self.mask_weight = mask_weight
         self.neg_pos_ratio = neg_pos_ratio
 
+        self.label_smoothing = label_smoothing
         self.focal_loss = FocalLoss(
             alpha=focal_alpha,
             gamma=focal_gamma,
             num_classes=num_classes,
+            label_smoothing=label_smoothing,
         )
 
     def match_anchors(

@@ -25,6 +25,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from src.training.losses import YOLACTLoss
+from src.data.augmentations import mixup_batch
 from src.utils.helpers import save_checkpoint, load_checkpoint
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ class Trainer:
         # Extract training config with defaults
         train_cfg = config.get('training', {})
         loss_cfg = config.get('loss', {})
+        aug_cfg = config.get('augmentation', {})
 
         self.num_epochs = train_cfg.get('epochs', 20)
         self.lr = train_cfg.get('lr', 0.001)
@@ -71,6 +73,10 @@ class Trainer:
         self.gradient_clip = train_cfg.get('gradient_clip', 10.0)
         self.val_interval = train_cfg.get('val_interval', 2)
         self.log_interval = train_cfg.get('log_interval', 20)
+
+        # MixUp config
+        self.use_mixup = aug_cfg.get('mixup', False)
+        self.mixup_alpha = aug_cfg.get('mixup_alpha', 0.2)
 
         # Determine if AMP is available and appropriate
         # MPS does NOT support torch.cuda.amp, so we skip AMP for MPS
@@ -109,6 +115,7 @@ class Trainer:
             focal_alpha=loss_cfg.get('focal_alpha', 0.25),
             focal_gamma=loss_cfg.get('focal_gamma', 2.0),
             neg_pos_ratio=loss_cfg.get('neg_pos_ratio', 3),
+            label_smoothing=loss_cfg.get('label_smoothing', 0.0),
         )
 
         # Checkpoint tracking
@@ -174,13 +181,31 @@ class Trainer:
                     for k, v in t.items()
                 })
 
+            # Apply MixUp augmentation if enabled
+            if self.use_mixup:
+                images, targets_a, targets_b, lam = mixup_batch(
+                    images, targets_device, alpha=self.mixup_alpha
+                )
+                targets_device = targets_a  # for logging consistency
+            else:
+                lam = None
+                targets_b = None
+
             self.optimizer.zero_grad()
 
             if self.use_amp:
                 # Mixed precision training (CUDA only)
                 with torch.amp.autocast('cuda'):
                     predictions = self.model(images)
-                    losses = self.criterion(predictions, targets_device)
+                    if lam is not None and targets_b is not None:
+                        losses_a = self.criterion(predictions, targets_device)
+                        losses_b = self.criterion(predictions, targets_b)
+                        losses = {
+                            k: lam * losses_a[k] + (1 - lam) * losses_b[k]
+                            for k in losses_a
+                        }
+                    else:
+                        losses = self.criterion(predictions, targets_device)
 
                 self.scaler.scale(losses['total']).backward()
 
@@ -195,7 +220,15 @@ class Trainer:
             else:
                 # Standard FP32 training (MPS / CPU)
                 predictions = self.model(images)
-                losses = self.criterion(predictions, targets_device)
+                if lam is not None and targets_b is not None:
+                    losses_a = self.criterion(predictions, targets_device)
+                    losses_b = self.criterion(predictions, targets_b)
+                    losses = {
+                        k: lam * losses_a[k] + (1 - lam) * losses_b[k]
+                        for k in losses_a
+                    }
+                else:
+                    losses = self.criterion(predictions, targets_device)
 
                 losses['total'].backward()
 

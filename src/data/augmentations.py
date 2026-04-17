@@ -19,10 +19,11 @@ All bounding boxes are in [x1, y1, x2, y2] absolute coordinate format.
 """
 
 import logging
-from typing import Tuple
+from typing import List, Tuple
 
 import cv2
 import numpy as np
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -505,6 +506,35 @@ class ValAugmentation:
         image = normalize(image)
 
         return image, boxes, labels
+
+
+def mixup_batch(
+    images: torch.Tensor,
+    targets: List[dict],
+    alpha: float = 0.2,
+) -> Tuple[torch.Tensor, List[dict], List[dict], float]:
+    """Apply MixUp augmentation to a batch of images and targets.
+
+    Samples lambda from Beta(alpha, alpha), linearly mixes pairs of images,
+    and returns both original and shuffled targets for combined loss computation.
+
+    Args:
+        images: Batch of images (B, C, H, W).
+        targets: List of target dicts for each image.
+        alpha: Beta distribution parameter controlling mix strength.
+
+    Returns:
+        mixed_images: Mixed image batch (B, C, H, W).
+        targets_a: Original targets.
+        targets_b: Shuffled targets.
+        lam: Mixing coefficient.
+    """
+    lam = np.random.beta(alpha, alpha) if alpha > 0 else 1.0
+    batch_size = images.size(0)
+    index = torch.randperm(batch_size)
+    mixed_images = lam * images + (1 - lam) * images[index]
+    targets_b = [targets[i] for i in index]
+    return mixed_images, targets, targets_b, lam
 
 
 if __name__ == "__main__":
