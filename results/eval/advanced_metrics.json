@@ -1,0 +1,5 @@
+{
+  "num_images": 100,
+  "checkpoint": "results/training/checkpoints/best_model.pth",
+  "device": "mps"
+}
