@@ -1,7 +1,7 @@
 {
-  "checkpoint": "results/training/checkpoints/best_model.pth",
+  "checkpoint": "none",
   "untrained": false,
-  "total_params": 9955750,
+  "total_params": 9980620,
   "onnx_export": true,
   "onnx_fp32_path": "results/deployment/yolact.onnx",
   "onnx_int8_path": "results/deployment/yolact_int8.onnx",
@@ -9,32 +9,22 @@
     {
       "backend": "PyTorch FP32",
       "device": "mps",
-      "avg_latency_ms": 276.2,
-      "std_latency_ms": 4.71,
-      "fps": 3.6,
-      "model_size_mb": 38.08,
+      "avg_latency_ms": 318.3,
+      "std_latency_ms": 23.3,
+      "fps": 3.1,
+      "model_size_mb": 38.17,
       "num_runs": 50
     },
     {
       "backend": "ONNX FP32",
       "device": "CPU (ONNX Runtime)",
-      "avg_latency_ms": 85.01,
-      "std_latency_ms": 5.41,
-      "fps": 11.8,
-      "model_size_mb": 0.52,
+      "avg_latency_ms": 120.26,
+      "std_latency_ms": 6.73,
+      "fps": 8.3,
+      "model_size_mb": 0.6,
       "num_runs": 50,
       "model_path": "results/deployment/yolact.onnx"
-    },
-    {
-      "backend": "ONNX INT8",
-      "device": "CPU (ONNX Runtime)",
-      "avg_latency_ms": 115.24,
-      "std_latency_ms": 27.65,
-      "fps": 8.7,
-      "model_size_mb": 9.94,
-      "num_runs": 50,
-      "model_path": "results/deployment/yolact_int8.onnx"
     }
   ],
-  "pipeline_time_s": 32.5
+  "pipeline_time_s": 32.2
 }
