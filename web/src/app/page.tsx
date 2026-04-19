@@ -20,7 +20,7 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.p variants={fadeUp} className="text-sm tracking-widest uppercase text-zinc-400 mb-6">
-              B.Tech Final Year Project &middot; Applied ML &amp; Deep Learning
+              Applied ML &amp; Deep Learning
             </motion.p>
             <motion.h1 variants={fadeUp} className="font-serif text-5xl md:text-7xl lg:text-8xl leading-[1.05] text-zinc-900">
               High-Density Object<br />

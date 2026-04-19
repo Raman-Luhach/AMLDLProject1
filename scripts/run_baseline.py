@@ -25,6 +25,7 @@ import sys
 import time
 
 import cv2
+import joblib
 import matplotlib
 matplotlib.use("Agg")  # non-interactive backend
 import matplotlib.pyplot as plt
@@ -378,6 +379,20 @@ def main():
     train_acc = model.train(X_train, y_train)
     train_time = time.time() - t0
     print(f"  Training time: {train_time:.1f}s")
+
+    # ------------------------------------------------------------------
+    # Save trained model for reuse (UI inference, etc.)
+    # ------------------------------------------------------------------
+    model_path = os.path.join(RESULTS_DIR, "hog_svm_model.pkl")
+    joblib.dump({
+        "svm": model.svm,
+        "scaler": model.scaler,
+        "window_size": model.window_size,
+        "cell_size": model.cell_size,
+        "block_size": model.block_size,
+        "nbins": model.nbins,
+    }, model_path)
+    print(f"  Saved trained model -> {model_path}")
 
     # ------------------------------------------------------------------
     # HOG feature visualisation (save before long eval)

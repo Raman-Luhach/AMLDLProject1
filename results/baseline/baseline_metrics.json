@@ -2,7 +2,7 @@
   "mAP@0.5": 3.09,
   "precision": 86.36,
   "recall": 2.09,
-  "avg_time_per_image_sec": 0.161,
+  "avg_time_per_image_sec": 0.251,
   "total_gt_boxes": 907,
   "total_detections": 22,
   "total_true_positives": 19,
@@ -64,9 +64,9 @@
   "num_val_images": 80,
   "train_accuracy": 100.0,
   "feature_dim": 1764,
-  "training_time_sec": 1.07,
-  "data_prep_time_sec": 6.47,
-  "evaluation_time_sec": 8.03,
+  "training_time_sec": 1.79,
+  "data_prep_time_sec": 10.11,
+  "evaluation_time_sec": 12.58,
   "window_size": [
     64,
     64

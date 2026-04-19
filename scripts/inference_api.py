@@ -5,6 +5,7 @@ Usage:
     python scripts/inference_api.py /path/to/image.jpg
 
 Outputs JSON to stdout with detection results.
+Logs progress to stderr (picked up by Next.js API route logs).
 """
 
 import json
@@ -12,9 +13,17 @@ import os
 import sys
 import time
 
+# Log to stderr so it doesn't mix with JSON stdout
+def log(msg):
+    print(f"[inference:python] {msg}", file=sys.stderr, flush=True)
+
+log("Script started")
+t_start = time.time()
+
 import cv2
 import numpy as np
 import torch
+log(f"Imports done ({time.time() - t_start:.1f}s)")
 
 # Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,12 +31,15 @@ sys.path.insert(0, project_root)
 
 from src.models.yolact import YOLACT, DEFAULT_CONFIG
 from src.data.augmentations import IMAGENET_MEAN, IMAGENET_STD
+log(f"Project modules imported ({time.time() - t_start:.1f}s)")
 
 
 def load_model(device):
     """Load the trained YOLACT model."""
+    log("Building YOLACT model...")
     config = {**DEFAULT_CONFIG, "pretrained_backbone": True}
     model = YOLACT(config=config)
+    log(f"Model built ({time.time() - t_start:.1f}s)")
 
     # Try to find the best checkpoint
     checkpoint_paths = [
@@ -35,15 +47,24 @@ def load_model(device):
         os.path.join(project_root, "results/training/checkpoints/final_model.pth"),
     ]
 
+    loaded = False
     for ckpt_path in checkpoint_paths:
         if os.path.exists(ckpt_path):
+            log(f"Loading checkpoint: {ckpt_path}")
             ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
             state_dict = ckpt.get("model_state_dict", ckpt)
             model.load_state_dict(state_dict, strict=False)
+            log(f"Checkpoint loaded ({time.time() - t_start:.1f}s)")
+            loaded = True
             break
 
+    if not loaded:
+        log("WARNING: No checkpoint found, using random weights!")
+
+    log(f"Moving model to {device}...")
     model = model.to(device)
     model.eval()
+    log(f"Model ready on {device} ({time.time() - t_start:.1f}s)")
     return model
 
 
@@ -55,6 +76,7 @@ def preprocess_image(image_path):
 
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     orig_h, orig_w = img_rgb.shape[:2]
+    log(f"Image loaded: {orig_w}x{orig_h}")
 
     # Resize to 550x550
     resized = cv2.resize(img_rgb, (550, 550), interpolation=cv2.INTER_LINEAR)
@@ -76,11 +98,14 @@ def main():
         sys.exit(1)
 
     image_path = sys.argv[1]
+    log(f"Image path: {image_path}")
     if not os.path.exists(image_path):
+        log(f"ERROR: Image not found: {image_path}")
         print(json.dumps({"error": f"Image not found: {image_path}"}))
         sys.exit(1)
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    log(f"Device: {device}")
 
     # Load model
     model = load_model(device)
@@ -90,10 +115,12 @@ def main():
     tensor = tensor.to(device)
 
     # Run inference
+    log("Running inference...")
     t0 = time.time()
     with torch.no_grad():
         detections = model(tensor)
     inference_ms = (time.time() - t0) * 1000
+    log(f"Inference done: {inference_ms:.0f}ms")
 
     # Process detections
     det = detections[0]
@@ -120,6 +147,7 @@ def main():
 
     # Sort by score descending
     results.sort(key=lambda x: x["score"], reverse=True)
+    log(f"Total detections (score > 0.05): {len(results)}")
 
     output = {
         "detections": results,
@@ -129,6 +157,7 @@ def main():
         "image_height": orig_h,
     }
 
+    log(f"Total time: {time.time() - t_start:.1f}s")
     print(json.dumps(output))
 
 

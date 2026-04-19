@@ -6,49 +6,45 @@ import { existsSync } from "fs";
 
 const PROJECT_ROOT = join(process.cwd(), "..");
 const UPLOAD_DIR = join(process.cwd(), "tmp");
-const INFERENCE_SCRIPT = join(PROJECT_ROOT, "scripts", "inference_api.py");
+const INFERENCE_SCRIPT = join(PROJECT_ROOT, "scripts", "inference_baseline.py");
 const VENV_PYTHON = join(PROJECT_ROOT, ".venv", "bin", "python");
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  console.log("[inference] Request received");
+  console.log("[baseline] Request received");
 
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
 
     if (!file) {
-      console.log("[inference] No image in request");
+      console.log("[baseline] No image in request");
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
 
-    console.log(`[inference] Image: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
+    console.log(`[baseline] Image: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
 
-    // Ensure upload dir exists
     if (!existsSync(UPLOAD_DIR)) {
       await mkdir(UPLOAD_DIR, { recursive: true });
     }
 
-    // Save uploaded file
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const filename = `upload_${Date.now()}.jpg`;
+    const filename = `upload_baseline_${Date.now()}.jpg`;
     const filepath = join(UPLOAD_DIR, filename);
     await writeFile(filepath, buffer);
-    console.log(`[inference] Saved to ${filepath}`);
+    console.log(`[baseline] Saved to ${filepath}`);
 
-    // Run inference via Python script
-    console.log("[inference] Starting Python inference...");
+    console.log("[baseline] Starting HOG+SVM inference...");
     const result = await runInference(filepath);
-    console.log(`[inference] Done! ${(result as { num_detections?: number }).num_detections} detections in ${Date.now() - startTime}ms total`);
+    console.log(`[baseline] Done! ${(result as { num_detections?: number }).num_detections} detections in ${Date.now() - startTime}ms total`);
 
-    // Clean up uploaded file
     await unlink(filepath).catch(() => {});
 
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Inference failed";
-    console.error(`[inference] ERROR after ${Date.now() - startTime}ms: ${message}`);
+    console.error(`[baseline] ERROR after ${Date.now() - startTime}ms: ${message}`);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -56,16 +52,14 @@ export async function POST(request: NextRequest) {
 function runInference(imagePath: string): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
     const python = existsSync(VENV_PYTHON) ? VENV_PYTHON : "python3";
-    console.log(`[inference] Python: ${python}`);
-    console.log(`[inference] Script: ${INFERENCE_SCRIPT}`);
-    console.log(`[inference] CWD: ${PROJECT_ROOT}`);
+    console.log(`[baseline] Python: ${python}`);
 
     const proc = spawn(python, [INFERENCE_SCRIPT, imagePath], {
       cwd: PROJECT_ROOT,
       env: { ...process.env, PYTHONUNBUFFERED: "1" },
     });
 
-    console.log(`[inference] Process spawned (PID: ${proc.pid})`);
+    console.log(`[baseline] Process spawned (PID: ${proc.pid})`);
 
     let stdout = "";
     let stderr = "";
@@ -77,12 +71,11 @@ function runInference(imagePath: string): Promise<Record<string, unknown>> {
     proc.stderr.on("data", (data) => {
       const chunk = data.toString();
       stderr += chunk;
-      // Print Python stderr in real-time (model loading progress, warnings, etc.)
-      console.log(`[inference:python] ${chunk.trimEnd()}`);
+      console.log(`[baseline:python] ${chunk.trimEnd()}`);
     });
 
     proc.on("close", (code) => {
-      console.log(`[inference] Process exited with code ${code}`);
+      console.log(`[baseline] Process exited with code ${code}`);
       if (code !== 0) {
         reject(new Error(stderr || `Process exited with code ${code}`));
         return;
@@ -91,21 +84,21 @@ function runInference(imagePath: string): Promise<Record<string, unknown>> {
         const result = JSON.parse(stdout);
         resolve(result);
       } catch {
-        console.error(`[inference] Failed to parse stdout: ${stdout.slice(0, 200)}`);
+        console.error(`[baseline] Failed to parse stdout: ${stdout.slice(0, 200)}`);
         reject(new Error("Failed to parse inference output"));
       }
     });
 
     proc.on("error", (err) => {
-      console.error(`[inference] Failed to spawn process: ${err.message}`);
+      console.error(`[baseline] Failed to spawn process: ${err.message}`);
       reject(new Error(`Failed to start Python: ${err.message}`));
     });
 
-    // Timeout after 120 seconds (first run loads model weights)
+    // Timeout after 60 seconds
     setTimeout(() => {
-      console.error("[inference] TIMEOUT - killing process after 120s");
+      console.error("[baseline] TIMEOUT - killing process after 60s");
       proc.kill();
-      reject(new Error("Inference timed out (120s)"));
-    }, 120000);
+      reject(new Error("Inference timed out (60s)"));
+    }, 60000);
   });
 }
