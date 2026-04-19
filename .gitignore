@@ -15,6 +15,12 @@ weights/*.pth
 weights/*.onnx
 !weights/.gitkeep
 
+# Training checkpoints and deployment models (too large for git)
+results/training/checkpoints/*.pth
+results/deployment/*.onnx
+results/deployment/*.onnx.data
+*.tar.gz
+
 # Jupyter
 .ipynb_checkpoints/
 
@@ -37,6 +43,7 @@ runs/
 
 # Documentation / Presentation files (kept locally, not tracked)
 CLAUDE_CODE_PROMPT.md
+PHASE2_PROMPT.md
 PRESENTATION_AND_SCRIPT.md
 SLIDE_CONTENT.md
 VIDEO_SCRIPT.md
