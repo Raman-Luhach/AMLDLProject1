@@ -1,0 +1,130 @@
+# Hybrid Neuro-Symbolic Detector Configuration
+# Extends default.yaml with spatial reasoning + fusion components
+
+# Inherit all base settings
+base_config: "configs/default.yaml"
+
+# Dataset (same as default)
+dataset:
+  name: "SKU-110K"
+  data_dir: "data"
+  num_classes: 1
+  input_size: 550
+  train_subset: 3000
+  num_workers: 4
+  pin_memory: true
+
+# YOLACT base model (same as default)
+backbone:
+  name: "mobilenetv3_large"
+  pretrained: true
+  freeze_bn: false
+  freeze_layers: 0
+
+fpn:
+  out_channels: 256
+  num_levels: 5
+  use_smooth: true
+
+yolact:
+  num_prototypes: 32
+  num_masks: 32
+  mask_dim: 32
+  max_detections: 300
+  conf_threshold: 0.05
+  nms_top_k: 200
+
+anchors:
+  sizes: [[24, 48], [48, 96], [96, 192], [192, 384], [384, 768]]
+  aspect_ratios: [0.5, 1.0, 2.0]
+  scales: [1.0, 1.26, 1.587]
+
+# Training config for hybrid stages
+training:
+  # Stage 1: YOLACT pre-training (use default.yaml with --resume)
+  yolact_epochs: 30
+  yolact_resume: "results/training/checkpoints/best_model.pth"
+
+  # Stage 3: Hybrid fusion training
+  batch_size: 4
+  optimizer: "sgd"
+  lr: 0.001
+  momentum: 0.9
+  weight_decay: 0.0005
+  gradient_clip: 10.0
+  amp: true
+  val_interval: 2
+
+  # Stage 3a: Frozen backbone
+  frozen_epochs: 10
+  frozen_lr: 0.001
+
+  # Stage 3b: Joint fine-tuning
+  finetune_epochs: 5
+  finetune_lr: 0.0001  # LR/10
+
+  # Checkpointing
+  save_interval: 5
+  checkpoint_dir: "results/hybrid/checkpoints"
+
+# Hybrid-specific components
+hybrid:
+  enable: true
+
+  # Spatial Reasoning Engine (ML - sklearn)
+  spatial_reasoning:
+    num_row_components: 8        # max shelf rows for GMM
+    kde_bandwidth: 0.05          # KDE bandwidth for density estimation
+    min_detections: 5            # minimum detections to compute features
+    save_dir: "results/hybrid/spatial_models"
+
+  # Confidence Recalibrator (small MLP)
+  recalibrator:
+    spatial_dim: 8               # spatial feature vector size
+    visual_dim: 64               # ROI-pooled visual embedding size
+    hidden_dims: [128, 64]       # MLP hidden layer sizes
+    dropout: 0.1
+
+  # Spatial Prior Attention (feedback loop)
+  spatial_attention:
+    gate_init: 0.1               # initial trust in spatial priors (learned)
+    conv_channels: 16            # intermediate channels in density encoder
+    apply_to_levels: ["P3"]      # which FPN levels get spatial attention
+
+  # Loss weights for hybrid training
+  losses:
+    yolact_weight: 1.0           # base YOLACT loss weight
+    recalibration_weight: 0.5    # confidence recalibration BCE loss
+    spatial_consistency_weight: 0.3  # spatial consistency penalty
+
+# Base losses (same as default)
+loss:
+  cls_weight: 1.0
+  box_weight: 1.5
+  mask_weight: 6.125
+  focal_alpha: 0.25
+  focal_gamma: 2.0
+  neg_pos_ratio: 3
+  label_smoothing: 0.1
+
+softnms:
+  method: "gaussian"
+  sigma: 0.5
+  score_threshold: 0.001
+  iou_threshold: 0.5
+
+augmentation:
+  mixup: true
+  mixup_alpha: 0.2
+
+evaluation:
+  iou_thresholds: [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+  max_detections: [1, 10, 100, 300]
+  score_threshold: 0.05
+
+deployment:
+  onnx_opset: 11
+  quantization: "int8"
+  benchmark_warmup: 10
+  benchmark_runs: 50
+  input_size: 550
