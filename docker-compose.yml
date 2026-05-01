@@ -1,0 +1,41 @@
+services:
+  train:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./weights:/app/weights
+    command: python scripts/train_hybrid.py --config configs/hybrid.yaml
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  evaluate:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+    command: python scripts/run_ablation.py --config configs/hybrid.yaml
+
+  diagram:
+    build: .
+    volumes:
+      - ./results:/app/results
+    command: python scripts/generate_architecture_diagram.py
+
+  test:
+    build: .
+    command: pytest tests/ -v --tb=short
+
+  web:
+    build: ./web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./results:/app/results
+    environment:
+      - NODE_ENV=production
