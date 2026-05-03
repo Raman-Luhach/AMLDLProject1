@@ -1,7 +1,6 @@
 """Unit tests for Ablation Study Framework."""
 
 import numpy as np
-import pytest
 
 from src.evaluation.ablation import AblationFramework, DENSITY_BUCKETS
 

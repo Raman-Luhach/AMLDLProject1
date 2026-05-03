@@ -16,18 +16,15 @@ import json
 import logging
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
-import numpy as np
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from src.models.hybrid import HybridDetector
 from src.training.losses import YOLACTLoss
 from src.training.hybrid_losses import HybridLoss
 from src.data.augmentations import mixup_batch
-from src.utils.helpers import save_checkpoint, load_checkpoint
 
 logger = logging.getLogger(__name__)
 

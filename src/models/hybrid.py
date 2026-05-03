@@ -26,7 +26,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from src.models.yolact import YOLACT, DEFAULT_CONFIG
 from src.models.spatial_reasoning import SpatialReasoningEngine

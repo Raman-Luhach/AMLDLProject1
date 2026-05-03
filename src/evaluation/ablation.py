@@ -15,13 +15,12 @@ Ablation Variants:
     8. no_cbam: Disable CBAM attention in FPN
 """
 
-import copy
 import json
 import logging
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import torch

@@ -24,9 +24,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
-import numpy as np
 
 # Color scheme
 DL_COLOR = "#4ECDC4"  # Teal for DL

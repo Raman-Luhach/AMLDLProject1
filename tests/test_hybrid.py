@@ -1,6 +1,5 @@
 """Unit tests for Hybrid Neuro-Symbolic Detector."""
 
-import numpy as np
 import pytest
 import torch
 
