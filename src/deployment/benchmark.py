@@ -97,9 +97,9 @@ def benchmark_pytorch(
             _ = model(dummy)
 
     # Synchronise before timing on MPS/CUDA
-    if device.type == 'cuda':
+    if device.type == "cuda":
         torch.cuda.synchronize()
-    elif device.type == 'mps':
+    elif device.type == "mps":
         torch.mps.synchronize()
 
     # Timed runs
@@ -109,9 +109,9 @@ def benchmark_pytorch(
         for _ in range(num_runs):
             t0 = time.perf_counter()
             _ = model(dummy)
-            if device.type == 'cuda':
+            if device.type == "cuda":
                 torch.cuda.synchronize()
-            elif device.type == 'mps':
+            elif device.type == "mps":
                 torch.mps.synchronize()
             latencies.append((time.perf_counter() - t0) * 1000)
 
@@ -121,26 +121,23 @@ def benchmark_pytorch(
     model_size = _pytorch_model_size_mb(model)
 
     result = {
-        'backend': 'PyTorch FP32',
-        'device': str(device),
-        'avg_latency_ms': round(avg_latency, 2),
-        'std_latency_ms': round(std_latency, 2),
-        'fps': round(fps, 1),
-        'model_size_mb': round(model_size, 2),
-        'num_runs': num_runs,
+        "backend": "PyTorch FP32",
+        "device": str(device),
+        "avg_latency_ms": round(avg_latency, 2),
+        "std_latency_ms": round(std_latency, 2),
+        "fps": round(fps, 1),
+        "model_size_mb": round(model_size, 2),
+        "num_runs": num_runs,
     }
 
-    logger.info(
-        f"PyTorch FP32 | {avg_latency:.1f} +/- {std_latency:.1f} ms | "
-        f"{fps:.1f} FPS | {model_size:.1f} MB"
-    )
+    logger.info(f"PyTorch FP32 | {avg_latency:.1f} +/- {std_latency:.1f} ms | " f"{fps:.1f} FPS | {model_size:.1f} MB")
 
     return result
 
 
 def benchmark_onnx(
     model_path: str,
-    label: str = 'ONNX FP32',
+    label: str = "ONNX FP32",
     input_size: int = 550,
     num_warmup: int = 10,
     num_runs: int = 50,
@@ -170,7 +167,7 @@ def benchmark_onnx(
 
     # Use CPU for consistent benchmarking (CoreML provider may not support
     # all ops from quantized models)
-    providers = ['CPUExecutionProvider']
+    providers = ["CPUExecutionProvider"]
     try:
         session = ort.InferenceSession(model_path, providers=providers)
     except Exception as e:
@@ -199,20 +196,17 @@ def benchmark_onnx(
     model_size = _get_model_size_mb(model_path)
 
     result = {
-        'backend': label,
-        'device': 'CPU (ONNX Runtime)',
-        'avg_latency_ms': round(avg_latency, 2),
-        'std_latency_ms': round(std_latency, 2),
-        'fps': round(fps, 1),
-        'model_size_mb': round(model_size, 2),
-        'num_runs': num_runs,
-        'model_path': model_path,
+        "backend": label,
+        "device": "CPU (ONNX Runtime)",
+        "avg_latency_ms": round(avg_latency, 2),
+        "std_latency_ms": round(std_latency, 2),
+        "fps": round(fps, 1),
+        "model_size_mb": round(model_size, 2),
+        "num_runs": num_runs,
+        "model_path": model_path,
     }
 
-    logger.info(
-        f"{label} | {avg_latency:.1f} +/- {std_latency:.1f} ms | "
-        f"{fps:.1f} FPS | {model_size:.1f} MB"
-    )
+    logger.info(f"{label} | {avg_latency:.1f} +/- {std_latency:.1f} ms | " f"{fps:.1f} FPS | {model_size:.1f} MB")
 
     return result
 
@@ -268,8 +262,8 @@ def benchmark_inference(
 
     # Save results
     if output_path:
-        os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
-        with open(output_path, 'w') as f:
+        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+        with open(output_path, "w") as f:
             json.dump(results, f, indent=2)
         logger.info(f"Benchmark results saved to {output_path}")
 
@@ -306,44 +300,45 @@ def _print_benchmark_table(results: List[Dict[str, Any]]) -> None:
     print("=" * 78)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s [%(levelname)s] %(message)s',
-        datefmt='%H:%M:%S',
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%H:%M:%S",
     )
 
-    parser = argparse.ArgumentParser(description='Benchmark YOLACT inference')
-    parser.add_argument('--input-size', type=int, default=550)
-    parser.add_argument('--num-warmup', type=int, default=10)
-    parser.add_argument('--num-runs', type=int, default=50)
-    parser.add_argument('--onnx-fp32', type=str, default='results/deployment/yolact.onnx')
-    parser.add_argument('--onnx-int8', type=str, default='results/deployment/yolact_int8.onnx')
-    parser.add_argument('--output', type=str, default='results/deployment/benchmark.json')
-    parser.add_argument('--skip-pytorch', action='store_true')
-    parser.add_argument('--checkpoint', type=str, default=None)
+    parser = argparse.ArgumentParser(description="Benchmark YOLACT inference")
+    parser.add_argument("--input-size", type=int, default=550)
+    parser.add_argument("--num-warmup", type=int, default=10)
+    parser.add_argument("--num-runs", type=int, default=50)
+    parser.add_argument("--onnx-fp32", type=str, default="results/deployment/yolact.onnx")
+    parser.add_argument("--onnx-int8", type=str, default="results/deployment/yolact_int8.onnx")
+    parser.add_argument("--output", type=str, default="results/deployment/benchmark.json")
+    parser.add_argument("--skip-pytorch", action="store_true")
+    parser.add_argument("--checkpoint", type=str, default=None)
     args = parser.parse_args()
 
     # Load PyTorch model
     pytorch_model = None
     if not args.skip_pytorch:
         from src.models.yolact import YOLACT
-        pytorch_model = YOLACT(config={'pretrained_backbone': True})
+
+        pytorch_model = YOLACT(config={"pretrained_backbone": True})
         if args.checkpoint and os.path.isfile(args.checkpoint):
-            ckpt = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
-            state = ckpt.get('model_state_dict', ckpt)
+            ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
+            state = ckpt.get("model_state_dict", ckpt)
             pytorch_model.load_state_dict(state, strict=False)
 
     model_paths = {}
     if os.path.isfile(args.onnx_fp32):
-        model_paths['ONNX FP32'] = args.onnx_fp32
+        model_paths["ONNX FP32"] = args.onnx_fp32
     if os.path.isfile(args.onnx_int8):
-        model_paths['ONNX INT8'] = args.onnx_int8
+        model_paths["ONNX INT8"] = args.onnx_int8
 
     # Also check for backbone-only fallback
-    fallback_path = args.onnx_fp32.replace('.onnx', '_backbone_fpn.onnx')
-    if os.path.isfile(fallback_path) and 'ONNX FP32' not in model_paths:
-        model_paths['ONNX FP32 (backbone+FPN)'] = fallback_path
+    fallback_path = args.onnx_fp32.replace(".onnx", "_backbone_fpn.onnx")
+    if os.path.isfile(fallback_path) and "ONNX FP32" not in model_paths:
+        model_paths["ONNX FP32 (backbone+FPN)"] = fallback_path
 
     benchmark_inference(
         model_paths=model_paths,

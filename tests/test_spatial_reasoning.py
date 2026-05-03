@@ -11,10 +11,10 @@ from src.models.spatial_reasoning import SpatialReasoningEngine
 @pytest.fixture
 def config():
     return {
-        'num_row_components': 4,
-        'kde_bandwidth': 0.1,
-        'min_detections': 3,
-        'save_dir': tempfile.mkdtemp(),
+        "num_row_components": 4,
+        "kde_bandwidth": 0.1,
+        "min_detections": 3,
+        "save_dir": tempfile.mkdtemp(),
     }
 
 
@@ -112,9 +112,7 @@ class TestSpatialReasoningEngine:
         engine.fit(synthetic_boxes, image_size=550)
 
         # Compute features before save
-        features_before = engine.compute_spatial_features(
-            synthetic_boxes[0], image_size=550
-        )
+        features_before = engine.compute_spatial_features(synthetic_boxes[0], image_size=550)
 
         # Save
         engine.save()
@@ -126,9 +124,7 @@ class TestSpatialReasoningEngine:
         assert new_engine.is_fitted
 
         # Features should be identical
-        features_after = new_engine.compute_spatial_features(
-            synthetic_boxes[0], image_size=550
-        )
+        features_after = new_engine.compute_spatial_features(synthetic_boxes[0], image_size=550)
         assert np.allclose(features_before, features_after)
 
     def test_gmm_detects_rows(self, engine, synthetic_boxes):

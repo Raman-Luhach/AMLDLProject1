@@ -103,9 +103,7 @@ class CBAM(nn.Module):
         kernel_size: Kernel size for the spatial attention convolution.
     """
 
-    def __init__(
-        self, channels: int, reduction: int = 16, kernel_size: int = 7
-    ) -> None:
+    def __init__(self, channels: int, reduction: int = 16, kernel_size: int = 7) -> None:
         super().__init__()
         self.channel_attention = ChannelAttention(channels, reduction)
         self.spatial_attention = SpatialAttention(kernel_size)

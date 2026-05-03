@@ -97,8 +97,7 @@ class SKU110KDataset(Dataset):
         """Parse SKU-110K CSV annotation file with data cleaning."""
         if not self.csv_path.exists():
             raise FileNotFoundError(
-                f"Annotation file not found: {self.csv_path}\n"
-                f"Run scripts/download_data.sh to download the dataset."
+                f"Annotation file not found: {self.csv_path}\n" f"Run scripts/download_data.sh to download the dataset."
             )
 
         seen_images = set()
@@ -263,9 +262,7 @@ class SKU110KDataset(Dataset):
             logger.warning(f"Error loading {path}: {e}")
             return None
 
-    def _default_transform(
-        self, image: np.ndarray, boxes: np.ndarray
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def _default_transform(self, image: np.ndarray, boxes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Default transform: resize + normalize. Used when no transform is provided."""
         h, w = image.shape[:2]
         target_size = self.input_size
@@ -290,9 +287,7 @@ class SKU110KDataset(Dataset):
 
         return image, boxes
 
-    def _generate_pseudo_masks(
-        self, boxes: torch.Tensor, height: int, width: int
-    ) -> torch.Tensor:
+    def _generate_pseudo_masks(self, boxes: torch.Tensor, height: int, width: int) -> torch.Tensor:
         """
         Generate pseudo segmentation masks from bounding boxes.
 
@@ -323,23 +318,17 @@ class SKU110KDataset(Dataset):
 
         return masks
 
-    def _blank_sample(
-        self, idx: int
-    ) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
+    def _blank_sample(self, idx: int) -> Tuple[torch.Tensor, Dict[str, torch.Tensor]]:
         """Return a blank sample for corrupt images."""
         image = torch.zeros((3, self.input_size, self.input_size), dtype=torch.float32)
         target = {
             "boxes": torch.zeros((0, 4), dtype=torch.float32),
             "labels": torch.zeros((0,), dtype=torch.int64),
-            "masks": torch.zeros(
-                (0, self.input_size, self.input_size), dtype=torch.uint8
-            ),
+            "masks": torch.zeros((0, self.input_size, self.input_size), dtype=torch.uint8),
             "image_id": torch.tensor(idx, dtype=torch.int64),
             "area": torch.zeros((0,), dtype=torch.float32),
             "iscrowd": torch.zeros((0,), dtype=torch.int64),
-            "orig_size": torch.tensor(
-                [self.input_size, self.input_size], dtype=torch.int64
-            ),
+            "orig_size": torch.tensor([self.input_size, self.input_size], dtype=torch.int64),
         }
         return image, target
 
@@ -356,7 +345,7 @@ class SKU110KDataset(Dataset):
 
 
 def sku110k_collate_fn(
-    batch: List[Tuple[torch.Tensor, Dict[str, torch.Tensor]]]
+    batch: List[Tuple[torch.Tensor, Dict[str, torch.Tensor]]],
 ) -> Tuple[torch.Tensor, List[Dict[str, torch.Tensor]]]:
     """
     Custom collate function for SKU-110K DataLoader.
@@ -381,9 +370,7 @@ def sku110k_collate_fn(
     return images, targets
 
 
-def get_dataloaders(
-    config: Dict[str, Any]
-) -> Tuple[DataLoader, DataLoader]:
+def get_dataloaders(config: Dict[str, Any]) -> Tuple[DataLoader, DataLoader]:
     """
     Create train and validation DataLoaders from config.
 
@@ -464,9 +451,7 @@ def get_dataloaders(
     return train_loader, val_loader
 
 
-def convert_to_coco_format(
-    dataset: SKU110KDataset, output_path: str
-) -> Dict[str, Any]:
+def convert_to_coco_format(dataset: SKU110KDataset, output_path: str) -> Dict[str, Any]:
     """
     Convert SKU-110K annotations to COCO JSON format for evaluation.
 
@@ -482,9 +467,7 @@ def convert_to_coco_format(
     coco_dict: Dict[str, Any] = {
         "images": [],
         "annotations": [],
-        "categories": [
-            {"id": 1, "name": "object", "supercategory": "product"}
-        ],
+        "categories": [{"id": 1, "name": "object", "supercategory": "product"}],
     }
 
     ann_id = 1
@@ -518,9 +501,7 @@ def convert_to_coco_format(
                     "bbox": [x1, y1, w, h],  # COCO format: [x, y, width, height]
                     "area": area,
                     "iscrowd": 0,
-                    "segmentation": [
-                        [x1, y1, x2, y1, x2, y2, x1, y2]
-                    ],  # Pseudo-segmentation from box
+                    "segmentation": [[x1, y1, x2, y1, x2, y2, x1, y2]],  # Pseudo-segmentation from box
                 }
             )
             ann_id += 1
@@ -546,9 +527,7 @@ if __name__ == "__main__":
 
     # Check if data exists
     data_dir = "data"
-    csv_path = os.path.join(
-        data_dir, "SKU110K_fixed", "annotations", "annotations_train.csv"
-    )
+    csv_path = os.path.join(data_dir, "SKU110K_fixed", "annotations", "annotations_train.csv")
 
     if not os.path.exists(csv_path):
         print(f"Dataset not found at {csv_path}")
@@ -561,9 +540,7 @@ if __name__ == "__main__":
         os.makedirs(f"{mock_dir}/SKU110K_fixed/images", exist_ok=True)
 
         # Create a mock CSV
-        with open(
-            f"{mock_dir}/SKU110K_fixed/annotations/annotations_train.csv", "w"
-        ) as f:
+        with open(f"{mock_dir}/SKU110K_fixed/annotations/annotations_train.csv", "w") as f:
             writer = csv.writer(f)
             for i in range(5):
                 img_name = f"test_{i}.jpg"
@@ -576,9 +553,7 @@ if __name__ == "__main__":
                     y1 = 50 + j * 80
                     x2 = x1 + 80
                     y2 = y1 + 60
-                    writer.writerow(
-                        [img_name, x1, y1, x2, y2, "object", 640, 480]
-                    )
+                    writer.writerow([img_name, x1, y1, x2, y2, "object", 640, 480])
 
         data_dir = mock_dir
 
@@ -603,7 +578,6 @@ if __name__ == "__main__":
         # Test COCO conversion
         coco_path = "/tmp/sku110k_coco_test.json"
         coco_dict = convert_to_coco_format(dataset, coco_path)
-        print(f"\nCOCO format: {len(coco_dict['images'])} images, "
-              f"{len(coco_dict['annotations'])} annotations")
+        print(f"\nCOCO format: {len(coco_dict['images'])} images, " f"{len(coco_dict['annotations'])} annotations")
 
     print("\n=== Test Complete ===")

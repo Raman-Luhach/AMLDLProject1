@@ -126,9 +126,7 @@ def _xyxy_to_cxcywh(boxes: np.ndarray) -> np.ndarray:
     return np.stack([cx, cy, w, h], axis=1)
 
 
-def _compute_iou_matrix(
-    boxes_a: np.ndarray, boxes_b: np.ndarray
-) -> np.ndarray:
+def _compute_iou_matrix(boxes_a: np.ndarray, boxes_b: np.ndarray) -> np.ndarray:
     """
     Compute pairwise IoU between two sets of boxes in [x1, y1, x2, y2] format.
 
@@ -206,7 +204,7 @@ def kmeans_anchors(
         min_dists = dists.min(axis=1)
 
         # Probability proportional to distance squared
-        probs = min_dists ** 2
+        probs = min_dists**2
         probs /= probs.sum()
 
         idx = rng.choice(n, p=probs)
@@ -248,9 +246,7 @@ def kmeans_anchors(
     return centroids, mean_iou
 
 
-def _wh_distance(
-    wh: np.ndarray, centroids: np.ndarray, use_iou: bool = True
-) -> np.ndarray:
+def _wh_distance(wh: np.ndarray, centroids: np.ndarray, use_iou: bool = True) -> np.ndarray:
     """
     Compute distance between width-height pairs and centroids.
 
@@ -267,7 +263,7 @@ def _wh_distance(
     if not use_iou:
         # Euclidean distance
         diff = wh[:, np.newaxis, :] - centroids[np.newaxis, :, :]
-        return np.sqrt((diff ** 2).sum(axis=2))
+        return np.sqrt((diff**2).sum(axis=2))
 
     # IoU distance: center all boxes at origin
     n = len(wh)
@@ -504,12 +500,8 @@ if __name__ == "__main__":
 
     # 3. Test encode/decode
     print("\n--- Encode/Decode ---")
-    test_gt = torch.tensor(
-        [[100, 100, 200, 200], [300, 300, 400, 450]], dtype=torch.float32
-    )
-    test_anchors = torch.tensor(
-        [[150, 150, 100, 100], [350, 375, 100, 150]], dtype=torch.float32
-    )
+    test_gt = torch.tensor([[100, 100, 200, 200], [300, 300, 400, 450]], dtype=torch.float32)
+    test_anchors = torch.tensor([[150, 150, 100, 100], [350, 375, 100, 150]], dtype=torch.float32)
     encoded = encode_boxes(test_gt, test_anchors)
     decoded = decode_boxes(encoded, test_anchors)
     assert torch.allclose(test_gt, decoded, atol=1e-4), "Encode/decode roundtrip failed"
@@ -525,9 +517,7 @@ if __name__ == "__main__":
     heights_syn = rng.lognormal(mean=3.5, sigma=0.6, size=n_synthetic).astype(np.float32)
     x1_syn = rng.uniform(0, 400, n_synthetic).astype(np.float32)
     y1_syn = rng.uniform(0, 400, n_synthetic).astype(np.float32)
-    synthetic_boxes = np.stack(
-        [x1_syn, y1_syn, x1_syn + widths_syn, y1_syn + heights_syn], axis=1
-    )
+    synthetic_boxes = np.stack([x1_syn, y1_syn, x1_syn + widths_syn, y1_syn + heights_syn], axis=1)
 
     centroids, mean_iou = kmeans_anchors(synthetic_boxes, k=9)
     print(f"K-means centroids (k=9):")

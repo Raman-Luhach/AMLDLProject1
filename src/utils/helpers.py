@@ -23,11 +23,11 @@ def get_device() -> torch.device:
         torch.device for the best available hardware accelerator.
     """
     if torch.backends.mps.is_available():
-        return torch.device('mps')
+        return torch.device("mps")
     elif torch.cuda.is_available():
-        return torch.device('cuda')
+        return torch.device("cuda")
     else:
-        return torch.device('cpu')
+        return torch.device("cpu")
 
 
 def load_config(path: str) -> Dict[str, Any]:
@@ -49,7 +49,7 @@ def load_config(path: str) -> Dict[str, Any]:
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
 
-    with open(config_path, 'r') as f:
+    with open(config_path, "r") as f:
         config = yaml.safe_load(f)
 
     return config if config is not None else {}
@@ -79,16 +79,16 @@ def save_checkpoint(
         extra: Optional dictionary of extra data to save.
     """
     checkpoint = {
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
     }
 
     if scheduler is not None:
-        checkpoint['scheduler_state_dict'] = scheduler.state_dict()
+        checkpoint["scheduler_state_dict"] = scheduler.state_dict()
 
     if best_metric is not None:
-        checkpoint['best_metric'] = best_metric
+        checkpoint["best_metric"] = best_metric
 
     if extra is not None:
         checkpoint.update(extra)
@@ -131,14 +131,14 @@ def load_checkpoint(
     map_location = device if device is not None else get_device()
     checkpoint = torch.load(path, map_location=map_location, weights_only=False)
 
-    if model is not None and 'model_state_dict' in checkpoint:
-        model.load_state_dict(checkpoint['model_state_dict'])
+    if model is not None and "model_state_dict" in checkpoint:
+        model.load_state_dict(checkpoint["model_state_dict"])
 
-    if optimizer is not None and 'optimizer_state_dict' in checkpoint:
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    if optimizer is not None and "optimizer_state_dict" in checkpoint:
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
-    if scheduler is not None and 'scheduler_state_dict' in checkpoint:
-        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+    if scheduler is not None and "scheduler_state_dict" in checkpoint:
+        scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
     return checkpoint
 
@@ -162,7 +162,7 @@ def set_seed(seed: int = 42) -> None:
 
     # Enable deterministic algorithms where possible
     torch.use_deterministic_algorithms(False)  # Set True for strict determinism
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
 
 
 def count_parameters(model: nn.Module) -> Tuple[int, int]:
@@ -196,7 +196,7 @@ def format_params(num: int) -> str:
         return str(num)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Test device detection
     device = get_device()
     print(f"Best available device: {device}")

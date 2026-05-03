@@ -55,25 +55,20 @@ class ProtoNet(nn.Module):
             nn.Conv2d(in_channels, hidden_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(hidden_channels),
             nn.ReLU(inplace=True),
-
             # Block 2: 3x3 conv + BN + ReLU
             nn.Conv2d(hidden_channels, hidden_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(hidden_channels),
             nn.ReLU(inplace=True),
-
             # Block 3: 3x3 conv + BN + ReLU
             nn.Conv2d(hidden_channels, hidden_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(hidden_channels),
             nn.ReLU(inplace=True),
-
             # Bilinear upsample 2x
-            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False),
-
+            nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False),
             # Block 4: 3x3 conv + BN + ReLU (after upsample)
             nn.Conv2d(hidden_channels, hidden_channels, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(hidden_channels),
             nn.ReLU(inplace=True),
-
             # Final 1x1 conv to produce prototypes + ReLU for non-negativity
             nn.Conv2d(hidden_channels, num_prototypes, kernel_size=1),
             nn.ReLU(inplace=True),
@@ -85,7 +80,7 @@ class ProtoNet(nn.Module):
         """Initialize weights using Kaiming normal for ReLU layers."""
         for module in self.proto_net.modules():
             if isinstance(module, nn.Conv2d):
-                nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(module.weight, mode="fan_out", nonlinearity="relu")
                 if module.bias is not None:
                     nn.init.zeros_(module.bias)
             elif isinstance(module, nn.BatchNorm2d):
@@ -106,9 +101,9 @@ class ProtoNet(nn.Module):
         return self.proto_net(p3)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Verify ProtoNet output shapes
-    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
 
     protonet = ProtoNet(in_channels=256, num_prototypes=32).to(device)

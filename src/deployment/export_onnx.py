@@ -123,7 +123,7 @@ def export_to_onnx(
     Returns:
         True if export succeeded, False otherwise.
     """
-    os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
     # Move model to CPU for export
     model_cpu = model.cpu()
@@ -141,14 +141,14 @@ def export_to_onnx(
         dummy_input,
         output_path,
         opset=opset,
-        input_names=['images'],
-        output_names=['class_preds', 'box_preds', 'mask_coeffs', 'prototypes'],
+        input_names=["images"],
+        output_names=["class_preds", "box_preds", "mask_coeffs", "prototypes"],
         dynamic_axes={
-            'images': {0: 'batch'},
-            'class_preds': {0: 'batch'},
-            'box_preds': {0: 'batch'},
-            'mask_coeffs': {0: 'batch'},
-            'prototypes': {0: 'batch'},
+            "images": {0: "batch"},
+            "class_preds": {0: "batch"},
+            "box_preds": {0: "batch"},
+            "mask_coeffs": {0: "batch"},
+            "prototypes": {0: "batch"},
         },
     )
 
@@ -160,22 +160,22 @@ def export_to_onnx(
         return True
 
     # ---- Attempt 2: backbone + FPN only ----
-    fallback_path = output_path.replace('.onnx', '_backbone_fpn.onnx')
+    fallback_path = output_path.replace(".onnx", "_backbone_fpn.onnx")
     logger.warning("Full model export failed. Trying backbone+FPN fallback...")
     fallback = BackboneFPNWrapper(model_cpu)
     fallback.eval()
 
-    output_names_fpn = [f'P{i}' for i in range(3, 8)]
-    dynamic_axes_fpn = {'images': {0: 'batch'}}
+    output_names_fpn = [f"P{i}" for i in range(3, 8)]
+    dynamic_axes_fpn = {"images": {0: "batch"}}
     for name in output_names_fpn:
-        dynamic_axes_fpn[name] = {0: 'batch'}
+        dynamic_axes_fpn[name] = {0: "batch"}
 
     success = _try_export(
         fallback,
         dummy_input,
         fallback_path,
         opset=opset,
-        input_names=['images'],
+        input_names=["images"],
         output_names=output_names_fpn,
         dynamic_axes=dynamic_axes_fpn,
     )
@@ -243,6 +243,7 @@ def _verify_onnx(path: str) -> bool:
     """
     try:
         import onnx
+
         model = onnx.load(path)
         onnx.checker.check_model(model)
         logger.info(f"ONNX model verification passed: {path}")
@@ -266,28 +267,28 @@ def _print_model_size(path: str) -> None:
         logger.info(f"Model size: {size_mb:.2f} MB ({path})")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s [%(levelname)s] %(message)s',
-        datefmt='%H:%M:%S',
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%H:%M:%S",
     )
 
-    parser = argparse.ArgumentParser(description='Export YOLACT to ONNX')
-    parser.add_argument('--output', type=str, default='results/deployment/yolact.onnx')
-    parser.add_argument('--input-size', type=int, default=550)
-    parser.add_argument('--opset', type=int, default=11)
-    parser.add_argument('--checkpoint', type=str, default=None)
+    parser = argparse.ArgumentParser(description="Export YOLACT to ONNX")
+    parser.add_argument("--output", type=str, default="results/deployment/yolact.onnx")
+    parser.add_argument("--input-size", type=int, default=550)
+    parser.add_argument("--opset", type=int, default=11)
+    parser.add_argument("--checkpoint", type=str, default=None)
     args = parser.parse_args()
 
     from src.models.yolact import YOLACT
 
-    model = YOLACT(config={'pretrained_backbone': True})
+    model = YOLACT(config={"pretrained_backbone": True})
 
     if args.checkpoint and os.path.isfile(args.checkpoint):
         logger.info(f"Loading checkpoint: {args.checkpoint}")
-        ckpt = torch.load(args.checkpoint, map_location='cpu', weights_only=False)
-        state = ckpt.get('model_state_dict', ckpt)
+        ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
+        state = ckpt.get("model_state_dict", ckpt)
         model.load_state_dict(state, strict=False)
 
     export_to_onnx(model, args.output, input_size=args.input_size, opset=args.opset)

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Generate synthetic shelf test images for the demo."""
+
 import cv2
 import numpy as np
 import os
 
-out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                       "web", "public", "samples")
+out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "web", "public", "samples")
 os.makedirs(out_dir, exist_ok=True)
 
 

@@ -44,15 +44,15 @@ class SpatialReasoningEngine:
 
     def __init__(self, config: Dict) -> None:
         self.config = config
-        self.num_row_components = config.get('num_row_components', 8)
-        self.kde_bandwidth = config.get('kde_bandwidth', 0.05)
-        self.min_detections = config.get('min_detections', 5)
-        self.save_dir = Path(config.get('save_dir', 'results/hybrid/spatial_models'))
+        self.num_row_components = config.get("num_row_components", 8)
+        self.kde_bandwidth = config.get("kde_bandwidth", 0.05)
+        self.min_detections = config.get("min_detections", 5)
+        self.save_dir = Path(config.get("save_dir", "results/hybrid/spatial_models"))
 
         # GMM for row structure detection
         self.gmm = GaussianMixture(
             n_components=self.num_row_components,
-            covariance_type='full',
+            covariance_type="full",
             random_state=42,
             max_iter=200,
             n_init=3,
@@ -61,7 +61,7 @@ class SpatialReasoningEngine:
         # KDE for spatial density estimation
         self.kde = KernelDensity(
             bandwidth=self.kde_bandwidth,
-            kernel='gaussian',
+            kernel="gaussian",
         )
 
         self.is_fitted = False
@@ -121,7 +121,7 @@ class SpatialReasoningEngine:
         best_n = self._select_gmm_components(centers_y)
         self.gmm = GaussianMixture(
             n_components=best_n,
-            covariance_type='full',
+            covariance_type="full",
             random_state=42,
             max_iter=200,
             n_init=3,
@@ -149,7 +149,7 @@ class SpatialReasoningEngine:
         for k in range(2, min(max_k + 1, self.num_row_components + 1)):
             gmm = GaussianMixture(
                 n_components=k,
-                covariance_type='full',
+                covariance_type="full",
                 random_state=42,
                 max_iter=100,
             )
@@ -161,8 +161,7 @@ class SpatialReasoningEngine:
 
         return best_k
 
-    def compute_spatial_features(self, detections: np.ndarray,
-                                  image_size: int = 550) -> np.ndarray:
+    def compute_spatial_features(self, detections: np.ndarray, image_size: int = 550) -> np.ndarray:
         """Extract 8-dimensional spatial feature vector from detections.
 
         Features capture scene-level statistics that characterize the
@@ -224,7 +223,7 @@ class SpatialReasoningEngine:
                 mask = row_assignments == r
                 if np.sum(mask) < 3:
                     continue
-                row_cx = ((dets_norm[mask, 0] + dets_norm[mask, 2]) / 2.0)
+                row_cx = (dets_norm[mask, 0] + dets_norm[mask, 2]) / 2.0
                 row_cx_sorted = np.sort(row_cx)
                 gaps = np.diff(row_cx_sorted)
                 if len(gaps) > 0 and np.mean(gaps) > 0:
@@ -258,9 +257,9 @@ class SpatialReasoningEngine:
 
         return features
 
-    def generate_density_field(self, detections: np.ndarray,
-                                shape: Tuple[int, int],
-                                image_size: int = 550) -> np.ndarray:
+    def generate_density_field(
+        self, detections: np.ndarray, shape: Tuple[int, int], image_size: int = 550
+    ) -> np.ndarray:
         """Generate spatial density map from detections.
 
         Produces a smooth density field indicating where objects are
@@ -308,8 +307,7 @@ class SpatialReasoningEngine:
 
         return density.astype(np.float32)
 
-    def bayesian_update(self, scores: np.ndarray,
-                         spatial_features: np.ndarray) -> np.ndarray:
+    def bayesian_update(self, scores: np.ndarray, spatial_features: np.ndarray) -> np.ndarray:
         """Bayesian confidence recalibration using spatial prior.
 
         Updates detection confidence using Bayes rule:
@@ -340,7 +338,7 @@ class SpatialReasoningEngine:
         # Bayesian update: blend original score with spatial prior
         # This is a simplified conjugate update
         alpha = 0.7  # weight of original score
-        beta = 0.3   # weight of spatial prior
+        beta = 0.3  # weight of spatial prior
         updated_scores = alpha * scores + beta * spatial_prior
 
         # Clip to valid range
@@ -355,17 +353,17 @@ class SpatialReasoningEngine:
         save_dir.mkdir(parents=True, exist_ok=True)
 
         state = {
-            'gmm': self.gmm,
-            'kde': self.kde,
-            'is_fitted': self.is_fitted,
-            'mean_objects_per_image': self._mean_objects_per_image,
-            'mean_box_area': self._mean_box_area,
-            'std_box_area': self._std_box_area,
-            'config': self.config,
+            "gmm": self.gmm,
+            "kde": self.kde,
+            "is_fitted": self.is_fitted,
+            "mean_objects_per_image": self._mean_objects_per_image,
+            "mean_box_area": self._mean_box_area,
+            "std_box_area": self._std_box_area,
+            "config": self.config,
         }
 
-        save_path = save_dir / 'spatial_engine.pkl'
-        with open(save_path, 'wb') as f:
+        save_path = save_dir / "spatial_engine.pkl"
+        with open(save_path, "wb") as f:
             pickle.dump(state, f)
         logger.info("Spatial reasoning engine saved to %s", save_path)
 
@@ -373,18 +371,18 @@ class SpatialReasoningEngine:
         """Load fitted models from disk."""
         save_dir = path or self.save_dir
         save_dir = Path(save_dir)
-        load_path = save_dir / 'spatial_engine.pkl'
+        load_path = save_dir / "spatial_engine.pkl"
 
         if not load_path.exists():
             raise FileNotFoundError(f"No spatial engine found at {load_path}")
 
-        with open(load_path, 'rb') as f:
+        with open(load_path, "rb") as f:
             state = pickle.load(f)
 
-        self.gmm = state['gmm']
-        self.kde = state['kde']
-        self.is_fitted = state['is_fitted']
-        self._mean_objects_per_image = state['mean_objects_per_image']
-        self._mean_box_area = state['mean_box_area']
-        self._std_box_area = state['std_box_area']
+        self.gmm = state["gmm"]
+        self.kde = state["kde"]
+        self.is_fitted = state["is_fitted"]
+        self._mean_objects_per_image = state["mean_objects_per_image"]
+        self._mean_box_area = state["mean_box_area"]
+        self._std_box_area = state["std_box_area"]
         logger.info("Spatial reasoning engine loaded from %s", load_path)

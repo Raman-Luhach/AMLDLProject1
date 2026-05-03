@@ -29,7 +29,7 @@ class MobileNetV3Backbone(nn.Module):
     """
 
     # Layer indices for feature extraction (0-indexed into model.features)
-    _C3_END = 6   # After InvertedResidual block 6: 40ch, stride 8
+    _C3_END = 6  # After InvertedResidual block 6: 40ch, stride 8
     _C4_END = 12  # After InvertedResidual block 12: 112ch, stride 16
     _C5_END = 16  # After Conv2dNormActivation (final): 960ch, stride ~32
 
@@ -49,9 +49,9 @@ class MobileNetV3Backbone(nn.Module):
         mobilenet = models.mobilenet_v3_large(weights=weights)
 
         # Split features into three sequential stages for multi-scale extraction
-        self.stage1 = nn.Sequential(*list(mobilenet.features[:self._C3_END + 1]))  # layers 0-6
-        self.stage2 = nn.Sequential(*list(mobilenet.features[self._C3_END + 1:self._C4_END + 1]))  # layers 7-12
-        self.stage3 = nn.Sequential(*list(mobilenet.features[self._C4_END + 1:self._C5_END + 1]))  # layers 13-16
+        self.stage1 = nn.Sequential(*list(mobilenet.features[: self._C3_END + 1]))  # layers 0-6
+        self.stage2 = nn.Sequential(*list(mobilenet.features[self._C3_END + 1 : self._C4_END + 1]))  # layers 7-12
+        self.stage3 = nn.Sequential(*list(mobilenet.features[self._C4_END + 1 : self._C5_END + 1]))  # layers 13-16
 
     @property
     def out_channels(self) -> List[int]:
@@ -93,12 +93,12 @@ class MobileNetV3Backbone(nn.Module):
         c4 = self.stage2(c3)
         c5 = self.stage3(c4)
 
-        return {'C3': c3, 'C4': c4, 'C5': c5}
+        return {"C3": c3, "C4": c4, "C5": c5}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Verify backbone output shapes and parameter count
-    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
 
     backbone = MobileNetV3Backbone(pretrained=False).to(device)

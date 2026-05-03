@@ -27,6 +27,7 @@ import time
 import cv2
 import joblib
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend
 import matplotlib.pyplot as plt
 import numpy as np
@@ -52,6 +53,7 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 # 1.  DATA LOADING / SYNTHETIC FALLBACK
 # ===================================================================
 
+
 def try_load_sku110k(max_train=300, max_val=100):
     """Attempt to load real SKU-110K images and annotations.
 
@@ -76,6 +78,7 @@ def try_load_sku110k(max_train=300, max_val=100):
 
     # Parse annotations
     from collections import defaultdict
+
     ann_map = defaultdict(list)
     with open(ann_file, "r") as f:
         for line in f:
@@ -128,6 +131,7 @@ def try_load_sku110k(max_train=300, max_val=100):
 # -------------------------------------------------------------------
 # Synthetic data generator
 # -------------------------------------------------------------------
+
 
 def generate_synthetic_dataset(
     num_train=300,
@@ -233,14 +237,14 @@ def generate_synthetic_dataset(
         val_annots.append(boxes)
 
     avg_products = np.mean([len(a) for a in train_annots + val_annots])
-    print(f"  Generated {num_train} train / {num_val} val images "
-          f"({avg_products:.1f} products/image avg).")
+    print(f"  Generated {num_train} train / {num_val} val images " f"({avg_products:.1f} products/image avg).")
     return train_images, train_annots, val_images, val_annots
 
 
 # ===================================================================
 # 2.  VISUALISATION HELPERS
 # ===================================================================
+
 
 def draw_detections(image, boxes, scores, gt_boxes=None, max_det=80):
     """Draw detection boxes (green) and optional GT boxes (blue) on image."""
@@ -258,8 +262,7 @@ def draw_detections(image, boxes, scores, gt_boxes=None, max_det=80):
         x1, y1, x2, y2 = boxes[i].astype(int)
         cv2.rectangle(vis, (x1, y1), (x2, y2), (0, 255, 0), 2)
         label = f"{scores[i]:.2f}"
-        cv2.putText(vis, label, (x1, max(y1 - 4, 10)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 0), 1)
+        cv2.putText(vis, label, (x1, max(y1 - 4, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 0), 1)
 
     return vis
 
@@ -294,15 +297,13 @@ def save_hog_visualization(images, model, path, n=4):
         h, w = img.shape[:2]
         cx = rng.randint(0, max(1, w - 64))
         cy = rng.randint(0, max(1, h - 64))
-        patch = img[cy:cy + 64, cx:cx + 64]
+        patch = img[cy : cy + 64, cx : cx + 64]
         if patch.shape[0] < 10 or patch.shape[1] < 10:
             patch = cv2.resize(img, (64, 64))
 
         _, hog_img = model.extract_hog_features(patch, visualize=True)
 
-        patch_rgb = cv2.cvtColor(
-            cv2.resize(patch, model.window_size), cv2.COLOR_BGR2RGB
-        )
+        patch_rgb = cv2.cvtColor(cv2.resize(patch, model.window_size), cv2.COLOR_BGR2RGB)
         axes[0, i].imshow(patch_rgb)
         axes[0, i].set_title(f"Patch {i}")
         axes[0, i].axis("off")
@@ -322,6 +323,7 @@ def save_hog_visualization(images, model, path, n=4):
 # 3.  MAIN
 # ===================================================================
 
+
 def main():
     print("=" * 65)
     print("  HOG + SVM Baseline for Dense Object Detection")
@@ -337,8 +339,11 @@ def main():
     else:
         print("[INFO] SKU-110K data not found -- using synthetic fallback.")
         train_images, train_annots, val_images, val_annots = generate_synthetic_dataset(
-            num_train=300, num_val=80, img_size=300,
-            min_products=10, max_products=30,
+            num_train=300,
+            num_val=80,
+            img_size=300,
+            min_products=10,
+            max_products=30,
         )
         data_source = "synthetic"
 
@@ -364,9 +369,7 @@ def main():
     # ------------------------------------------------------------------
     print("\n--- Preparing training data ---")
     t0 = time.time()
-    X_train, y_train = model.prepare_training_data(
-        train_images, train_annots, num_pos=5000, num_neg=10000
-    )
+    X_train, y_train = model.prepare_training_data(train_images, train_annots, num_pos=5000, num_neg=10000)
     prep_time = time.time() - t0
     print(f"  Feature matrix shape: {X_train.shape}")
     print(f"  Preparation time    : {prep_time:.1f}s")
@@ -384,14 +387,17 @@ def main():
     # Save trained model for reuse (UI inference, etc.)
     # ------------------------------------------------------------------
     model_path = os.path.join(RESULTS_DIR, "hog_svm_model.pkl")
-    joblib.dump({
-        "svm": model.svm,
-        "scaler": model.scaler,
-        "window_size": model.window_size,
-        "cell_size": model.cell_size,
-        "block_size": model.block_size,
-        "nbins": model.nbins,
-    }, model_path)
+    joblib.dump(
+        {
+            "svm": model.svm,
+            "scaler": model.scaler,
+            "window_size": model.window_size,
+            "cell_size": model.cell_size,
+            "block_size": model.block_size,
+            "nbins": model.nbins,
+        },
+        model_path,
+    )
     print(f"  Saved trained model -> {model_path}")
 
     # ------------------------------------------------------------------

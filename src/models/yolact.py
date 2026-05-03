@@ -24,36 +24,29 @@ from src.models.protonet import ProtoNet
 from src.models.prediction_head import PredictionHead
 from src.models.detection import Detect
 
-
 # Default model configuration
 DEFAULT_CONFIG = {
     # Input
-    'input_size': 550,
-
+    "input_size": 550,
     # Backbone
-    'pretrained_backbone': True,
-    'freeze_backbone_layers': 0,
-
+    "pretrained_backbone": True,
+    "freeze_backbone_layers": 0,
     # FPN
-    'fpn_out_channels': 256,
-
+    "fpn_out_channels": 256,
     # ProtoNet
-    'num_prototypes': 32,
-
+    "num_prototypes": 32,
     # Detection
-    'num_classes': 2,  # 1 foreground + 1 background
-    'num_anchors': 9,  # 3 aspect ratios x 3 scales
-
+    "num_classes": 2,  # 1 foreground + 1 background
+    "num_anchors": 9,  # 3 aspect ratios x 3 scales
     # Anchors
-    'anchor_scales': [24, 48, 96, 192, 384],   # Base sizes for P3-P7
-    'anchor_ratios': [0.5, 1.0, 2.0],           # Aspect ratios
-    'anchor_scale_factors': [1.0, 1.26, 1.587],  # ~2^(0/3), 2^(1/3), 2^(2/3)
-
+    "anchor_scales": [24, 48, 96, 192, 384],  # Base sizes for P3-P7
+    "anchor_ratios": [0.5, 1.0, 2.0],  # Aspect ratios
+    "anchor_scale_factors": [1.0, 1.26, 1.587],  # ~2^(0/3), 2^(1/3), 2^(2/3)
     # Post-processing
-    'conf_threshold': 0.05,
-    'nms_sigma': 0.5,
-    'top_k': 200,
-    'max_detections': 100,
+    "conf_threshold": 0.05,
+    "nms_sigma": 0.5,
+    "top_k": 200,
+    "max_detections": 100,
 }
 
 
@@ -84,37 +77,37 @@ class YOLACT(nn.Module):
         cfg = self.config
 
         # Build backbone
-        self.backbone = MobileNetV3Backbone(pretrained=cfg['pretrained_backbone'])
-        if cfg['freeze_backbone_layers'] > 0:
-            self.backbone.freeze_layers(cfg['freeze_backbone_layers'])
+        self.backbone = MobileNetV3Backbone(pretrained=cfg["pretrained_backbone"])
+        if cfg["freeze_backbone_layers"] > 0:
+            self.backbone.freeze_layers(cfg["freeze_backbone_layers"])
 
         # Build FPN
         self.fpn = FPN(
             in_channels_list=self.backbone.out_channels,
-            out_channels=cfg['fpn_out_channels'],
+            out_channels=cfg["fpn_out_channels"],
         )
 
         # Build ProtoNet (operates on P3, the finest FPN level)
         self.protonet = ProtoNet(
-            in_channels=cfg['fpn_out_channels'],
-            num_prototypes=cfg['num_prototypes'],
+            in_channels=cfg["fpn_out_channels"],
+            num_prototypes=cfg["num_prototypes"],
         )
 
         # Build prediction head (shared across all FPN levels)
         self.prediction_head = PredictionHead(
-            in_channels=cfg['fpn_out_channels'],
-            num_classes=cfg['num_classes'],
-            num_anchors=cfg['num_anchors'],
-            num_prototypes=cfg['num_prototypes'],
+            in_channels=cfg["fpn_out_channels"],
+            num_classes=cfg["num_classes"],
+            num_anchors=cfg["num_anchors"],
+            num_prototypes=cfg["num_prototypes"],
         )
 
         # Post-processing (not an nn.Module, no parameters)
         self.detect = Detect(
-            num_classes=cfg['num_classes'],
-            conf_threshold=cfg['conf_threshold'],
-            nms_sigma=cfg['nms_sigma'],
-            top_k=cfg['top_k'],
-            max_detections=cfg['max_detections'],
+            num_classes=cfg["num_classes"],
+            conf_threshold=cfg["conf_threshold"],
+            nms_sigma=cfg["nms_sigma"],
+            top_k=cfg["top_k"],
+            max_detections=cfg["max_detections"],
         )
 
         # Pre-generate anchors (registered as buffer, not a parameter)
@@ -130,9 +123,7 @@ class YOLACT(nn.Module):
         """
         return next(self.parameters()).device
 
-    def _generate_anchors(
-        self, fpn_shapes: List[Tuple[int, int]], input_size: int
-    ) -> torch.Tensor:
+    def _generate_anchors(self, fpn_shapes: List[Tuple[int, int]], input_size: int) -> torch.Tensor:
         """Generate anchor boxes for all FPN levels.
 
         Creates a grid of anchors at each FPN level with multiple scales
@@ -147,9 +138,9 @@ class YOLACT(nn.Module):
             Anchors tensor (total_anchors, 4) as [cx, cy, w, h] in [0, 1].
         """
         cfg = self.config
-        anchor_scales = cfg['anchor_scales']
-        anchor_ratios = cfg['anchor_ratios']
-        scale_factors = cfg['anchor_scale_factors']
+        anchor_scales = cfg["anchor_scales"]
+        anchor_ratios = cfg["anchor_ratios"]
+        scale_factors = cfg["anchor_scale_factors"]
 
         all_anchors = []
 
@@ -160,7 +151,7 @@ class YOLACT(nn.Module):
             # Center of each cell in normalized coordinates
             cy = (torch.arange(fh, dtype=torch.float32) + 0.5) / fh
             cx = (torch.arange(fw, dtype=torch.float32) + 0.5) / fw
-            cy, cx = torch.meshgrid(cy, cx, indexing='ij')
+            cy, cx = torch.meshgrid(cy, cx, indexing="ij")
             centers = torch.stack([cx, cy], dim=-1).view(-1, 2)  # (fh*fw, 2)
 
             # Generate anchor sizes (width, height) for each ratio and scale
@@ -191,9 +182,7 @@ class YOLACT(nn.Module):
 
         return torch.cat(all_anchors, dim=0)
 
-    def forward(
-        self, images: torch.Tensor
-    ) -> Union[
+    def forward(self, images: torch.Tensor) -> Union[
         Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor],
         List[Dict[str, torch.Tensor]],
     ]:
@@ -247,9 +236,7 @@ class YOLACT(nn.Module):
         else:
             # Post-processing for inference
             with torch.no_grad():
-                detections = self.detect(
-                    class_preds, box_preds, mask_coeffs, prototypes, anchors
-                )
+                detections = self.detect(class_preds, box_preds, mask_coeffs, prototypes, anchors)
             return detections
 
     def count_parameters(self) -> Dict[str, int]:
@@ -259,6 +246,7 @@ class YOLACT(nn.Module):
             Dictionary with parameter counts for each model component
             and total/trainable counts.
         """
+
         def _count(module: nn.Module) -> Tuple[int, int]:
             total = sum(p.numel() for p in module.parameters())
             trainable = sum(p.numel() for p in module.parameters() if p.requires_grad)
@@ -273,16 +261,16 @@ class YOLACT(nn.Module):
         trainable = backbone_train + fpn_train + proto_train + head_train
 
         return {
-            'backbone': {'total': backbone_total, 'trainable': backbone_train},
-            'fpn': {'total': fpn_total, 'trainable': fpn_train},
-            'protonet': {'total': proto_total, 'trainable': proto_train},
-            'prediction_head': {'total': head_total, 'trainable': head_train},
-            'total': total,
-            'trainable': trainable,
+            "backbone": {"total": backbone_total, "trainable": backbone_train},
+            "fpn": {"total": fpn_total, "trainable": fpn_train},
+            "protonet": {"total": proto_total, "trainable": proto_train},
+            "prediction_head": {"total": head_total, "trainable": head_train},
+            "total": total,
+            "trainable": trainable,
         }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from src.utils.helpers import get_device, format_params
 
     device = get_device()
@@ -294,17 +282,27 @@ if __name__ == '__main__':
     # Print parameter counts
     param_info = model.count_parameters()
     print("\nModel Parameter Counts:")
-    print(f"  Backbone:        {format_params(param_info['backbone']['total']):>8s} total, "
-          f"{format_params(param_info['backbone']['trainable']):>8s} trainable")
-    print(f"  FPN:             {format_params(param_info['fpn']['total']):>8s} total, "
-          f"{format_params(param_info['fpn']['trainable']):>8s} trainable")
-    print(f"  ProtoNet:        {format_params(param_info['protonet']['total']):>8s} total, "
-          f"{format_params(param_info['protonet']['trainable']):>8s} trainable")
-    print(f"  PredictionHead:  {format_params(param_info['prediction_head']['total']):>8s} total, "
-          f"{format_params(param_info['prediction_head']['trainable']):>8s} trainable")
+    print(
+        f"  Backbone:        {format_params(param_info['backbone']['total']):>8s} total, "
+        f"{format_params(param_info['backbone']['trainable']):>8s} trainable"
+    )
+    print(
+        f"  FPN:             {format_params(param_info['fpn']['total']):>8s} total, "
+        f"{format_params(param_info['fpn']['trainable']):>8s} trainable"
+    )
+    print(
+        f"  ProtoNet:        {format_params(param_info['protonet']['total']):>8s} total, "
+        f"{format_params(param_info['protonet']['trainable']):>8s} trainable"
+    )
+    print(
+        f"  PredictionHead:  {format_params(param_info['prediction_head']['total']):>8s} total, "
+        f"{format_params(param_info['prediction_head']['trainable']):>8s} trainable"
+    )
     print(f"  -------")
-    print(f"  Total:           {format_params(param_info['total']):>8s} total, "
-          f"{format_params(param_info['trainable']):>8s} trainable")
+    print(
+        f"  Total:           {format_params(param_info['total']):>8s} total, "
+        f"{format_params(param_info['trainable']):>8s} trainable"
+    )
 
     # Test training forward pass
     print(f"\nTesting training forward pass (input: 1x3x550x550)...")

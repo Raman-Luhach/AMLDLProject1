@@ -40,9 +40,16 @@ class TestAblationFramework:
 
     def test_variants_defined(self):
         """All expected variants should be defined."""
-        expected = ['full_hybrid', 'dl_only', 'no_recalibrator',
-                   'no_spatial_attention', 'no_row_model', 'no_density_field',
-                   'hard_nms', 'no_cbam']
+        expected = [
+            "full_hybrid",
+            "dl_only",
+            "no_recalibrator",
+            "no_spatial_attention",
+            "no_row_model",
+            "no_density_field",
+            "hard_nms",
+            "no_cbam",
+        ]
         for name in expected:
             assert name in AblationFramework.VARIANTS
 
@@ -50,22 +57,22 @@ class TestAblationFramework:
         """Metrics should handle empty predictions gracefully."""
         framework = AblationFramework.__new__(AblationFramework)
         metrics = framework._compute_metrics(
-            predictions=[{'boxes': np.zeros((0, 4)), 'scores': np.array([])}],
-            targets=[{'boxes': np.array([[0, 0, 10, 10]])}],
+            predictions=[{"boxes": np.zeros((0, 4)), "scores": np.array([])}],
+            targets=[{"boxes": np.array([[0, 0, 10, 10]])}],
             iou_threshold=0.5,
         )
-        assert metrics['mAP_50'] == 0.0
-        assert metrics['FN'] == 1
+        assert metrics["mAP_50"] == 0.0
+        assert metrics["FN"] == 1
 
     def test_perfect_predictions(self):
         """Perfect predictions should yield high metrics."""
         framework = AblationFramework.__new__(AblationFramework)
         gt_box = np.array([[10, 10, 50, 50]], dtype=np.float32)
         metrics = framework._compute_metrics(
-            predictions=[{'boxes': gt_box, 'scores': np.array([0.99])}],
-            targets=[{'boxes': gt_box}],
+            predictions=[{"boxes": gt_box, "scores": np.array([0.99])}],
+            targets=[{"boxes": gt_box}],
             iou_threshold=0.5,
         )
-        assert metrics['precision'] == 1.0
-        assert metrics['recall'] == 1.0
-        assert metrics['F1'] == 1.0
+        assert metrics["precision"] == 1.0
+        assert metrics["recall"] == 1.0
+        assert metrics["F1"] == 1.0

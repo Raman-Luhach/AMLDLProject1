@@ -13,8 +13,10 @@ import os
 import sys
 import time
 
+
 def log(msg):
     print(f"[baseline:python] {msg}", file=sys.stderr, flush=True)
+
 
 log("Script started")
 t_start = time.time()
@@ -77,7 +79,7 @@ def sliding_window_detect(image, model_data, score_threshold=0.5, nms_threshold=
 
         for y in range(0, h_r - win_h + 1, step_size):
             for x in range(0, w_r - win_w + 1, step_size):
-                patch = gray[y:y + win_h, x:x + win_w]
+                patch = gray[y : y + win_h, x : x + win_w]
                 feat = hog(
                     patch,
                     orientations=nbins,
@@ -183,16 +185,18 @@ def main():
     results = []
     for i in range(len(boxes)):
         x1, y1, x2, y2 = boxes[i]
-        results.append({
-            "box": [
-                float(x1 / scale),
-                float(y1 / scale),
-                float(x2 / scale),
-                float(y2 / scale),
-            ],
-            "score": float(scores[i]),
-            "label": 0,
-        })
+        results.append(
+            {
+                "box": [
+                    float(x1 / scale),
+                    float(y1 / scale),
+                    float(x2 / scale),
+                    float(y2 / scale),
+                ],
+                "score": float(scores[i]),
+                "label": 0,
+            }
+        )
 
     results.sort(key=lambda x: x["score"], reverse=True)
     log(f"Total detections: {len(results)}")

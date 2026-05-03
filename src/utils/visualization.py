@@ -12,9 +12,11 @@ import torch
 
 try:
     import matplotlib
-    matplotlib.use('Agg')  # Non-interactive backend for headless environments
+
+    matplotlib.use("Agg")  # Non-interactive backend for headless environments
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
+
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -22,16 +24,16 @@ except ImportError:
 
 # Color palette for visualization (RGB, 0-1 range)
 COLORS = [
-    (0.122, 0.467, 0.706),   # Blue
-    (1.000, 0.498, 0.055),   # Orange
-    (0.173, 0.627, 0.173),   # Green
-    (0.839, 0.153, 0.157),   # Red
-    (0.580, 0.404, 0.741),   # Purple
-    (0.549, 0.337, 0.294),   # Brown
-    (0.890, 0.467, 0.761),   # Pink
-    (0.498, 0.498, 0.498),   # Gray
-    (0.737, 0.741, 0.133),   # Yellow-green
-    (0.090, 0.745, 0.812),   # Cyan
+    (0.122, 0.467, 0.706),  # Blue
+    (1.000, 0.498, 0.055),  # Orange
+    (0.173, 0.627, 0.173),  # Green
+    (0.839, 0.153, 0.157),  # Red
+    (0.580, 0.404, 0.741),  # Purple
+    (0.549, 0.337, 0.294),  # Brown
+    (0.890, 0.467, 0.761),  # Pink
+    (0.498, 0.498, 0.498),  # Gray
+    (0.737, 0.741, 0.133),  # Yellow-green
+    (0.090, 0.745, 0.812),  # Cyan
 ]
 
 
@@ -89,9 +91,11 @@ def draw_detections(
             # Resize mask to image size if needed
             if mask.shape != (h, w):
                 mask_tensor = torch.from_numpy(mask).unsqueeze(0).unsqueeze(0).float()
-                mask = torch.nn.functional.interpolate(
-                    mask_tensor, size=(h, w), mode='bilinear', align_corners=False
-                ).squeeze().numpy()
+                mask = (
+                    torch.nn.functional.interpolate(mask_tensor, size=(h, w), mode="bilinear", align_corners=False)
+                    .squeeze()
+                    .numpy()
+                )
 
             # Apply mask overlay
             mask_bool = mask > 0.5
@@ -105,13 +109,13 @@ def draw_detections(
         # Draw bounding box
         thickness = max(1, int(min(h, w) / 300))
         # Top
-        img[max(y1, 0):min(y1 + thickness, h), max(x1, 0):min(x2, w)] = color
+        img[max(y1, 0) : min(y1 + thickness, h), max(x1, 0) : min(x2, w)] = color
         # Bottom
-        img[max(y2 - thickness, 0):min(y2, h), max(x1, 0):min(x2, w)] = color
+        img[max(y2 - thickness, 0) : min(y2, h), max(x1, 0) : min(x2, w)] = color
         # Left
-        img[max(y1, 0):min(y2, h), max(x1, 0):min(x1 + thickness, w)] = color
+        img[max(y1, 0) : min(y2, h), max(x1, 0) : min(x1 + thickness, w)] = color
         # Right
-        img[max(y1, 0):min(y2, h), max(x2 - thickness, 0):min(x2, w)] = color
+        img[max(y1, 0) : min(y2, h), max(x2 - thickness, 0) : min(x2, w)] = color
 
         # Build label text
         if class_names is not None and int(labels[i]) < len(class_names):
@@ -177,8 +181,12 @@ def draw_detections_figure(
 
         # Draw box
         rect = patches.Rectangle(
-            (x1, y1), x2 - x1, y2 - y1,
-            linewidth=2, edgecolor=color, facecolor='none',
+            (x1, y1),
+            x2 - x1,
+            y2 - y1,
+            linewidth=2,
+            edgecolor=color,
+            facecolor="none",
         )
         ax.add_patch(rect)
 
@@ -189,16 +197,19 @@ def draw_detections_figure(
             label_text = f"Class {int(labels_f[i])}: {scores_f[i]:.2f}"
 
         ax.text(
-            x1, y1 - 5, label_text,
-            fontsize=10, color='white',
-            bbox=dict(boxstyle='round,pad=0.2', facecolor=color, alpha=0.8),
+            x1,
+            y1 - 5,
+            label_text,
+            fontsize=10,
+            color="white",
+            bbox=dict(boxstyle="round,pad=0.2", facecolor=color, alpha=0.8),
         )
 
-    ax.axis('off')
+    ax.axis("off")
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=150, bbox_inches='tight')
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
         plt.close(fig)
         return None
 
@@ -229,15 +240,17 @@ def plot_training_curves(
     log_path = Path(log_file)
 
     # Parse log file
-    if log_path.suffix == '.csv':
+    if log_path.suffix == ".csv":
         import csv
-        with open(log_path, 'r') as f:
+
+        with open(log_path, "r") as f:
             reader = csv.DictReader(f)
             data = list(reader)
-    elif log_path.suffix in ('.jsonl', '.json'):
+    elif log_path.suffix in (".jsonl", ".json"):
         import json
+
         data = []
-        with open(log_path, 'r') as f:
+        with open(log_path, "r") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -249,11 +262,11 @@ def plot_training_curves(
         raise ValueError(f"Empty log file: {log_file}")
 
     # Extract columns
-    epochs = [float(d.get('epoch', i)) for i, d in enumerate(data)]
-    train_loss = [float(d['train_loss']) for d in data if 'train_loss' in d]
-    val_loss = [float(d['val_loss']) for d in data if 'val_loss' in d]
-    has_map = 'mAP' in data[0]
-    has_lr = 'lr' in data[0]
+    epochs = [float(d.get("epoch", i)) for i, d in enumerate(data)]
+    train_loss = [float(d["train_loss"]) for d in data if "train_loss" in d]
+    val_loss = [float(d["val_loss"]) for d in data if "val_loss" in d]
+    has_map = "mAP" in data[0]
+    has_lr = "lr" in data[0]
 
     num_plots = 2
     if has_map:
@@ -261,9 +274,7 @@ def plot_training_curves(
     if has_lr:
         num_plots += 1
 
-    fig, axes = plt.subplots(
-        (num_plots + 1) // 2, 2, figsize=figsize
-    )
+    fig, axes = plt.subplots((num_plots + 1) // 2, 2, figsize=figsize)
     axes = axes.flatten()
 
     plot_idx = 0
@@ -271,10 +282,10 @@ def plot_training_curves(
     # Training loss
     if train_loss:
         ax = axes[plot_idx]
-        ax.plot(epochs[:len(train_loss)], train_loss, 'b-', label='Train Loss', linewidth=1.5)
-        ax.set_xlabel('Epoch')
-        ax.set_ylabel('Loss')
-        ax.set_title('Training Loss')
+        ax.plot(epochs[: len(train_loss)], train_loss, "b-", label="Train Loss", linewidth=1.5)
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Loss")
+        ax.set_title("Training Loss")
         ax.legend()
         ax.grid(True, alpha=0.3)
         plot_idx += 1
@@ -282,10 +293,10 @@ def plot_training_curves(
     # Validation loss
     if val_loss:
         ax = axes[plot_idx]
-        ax.plot(epochs[:len(val_loss)], val_loss, 'r-', label='Val Loss', linewidth=1.5)
-        ax.set_xlabel('Epoch')
-        ax.set_ylabel('Loss')
-        ax.set_title('Validation Loss')
+        ax.plot(epochs[: len(val_loss)], val_loss, "r-", label="Val Loss", linewidth=1.5)
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Loss")
+        ax.set_title("Validation Loss")
         ax.legend()
         ax.grid(True, alpha=0.3)
         plot_idx += 1
@@ -293,23 +304,23 @@ def plot_training_curves(
     # Combined loss
     if train_loss and val_loss:
         ax = axes[plot_idx]
-        ax.plot(epochs[:len(train_loss)], train_loss, 'b-', label='Train', linewidth=1.5)
-        ax.plot(epochs[:len(val_loss)], val_loss, 'r-', label='Val', linewidth=1.5)
-        ax.set_xlabel('Epoch')
-        ax.set_ylabel('Loss')
-        ax.set_title('Train vs Val Loss')
+        ax.plot(epochs[: len(train_loss)], train_loss, "b-", label="Train", linewidth=1.5)
+        ax.plot(epochs[: len(val_loss)], val_loss, "r-", label="Val", linewidth=1.5)
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Loss")
+        ax.set_title("Train vs Val Loss")
         ax.legend()
         ax.grid(True, alpha=0.3)
         plot_idx += 1
 
     # mAP
     if has_map:
-        mAP_vals = [float(d['mAP']) for d in data]
+        mAP_vals = [float(d["mAP"]) for d in data]
         ax = axes[plot_idx]
-        ax.plot(epochs, mAP_vals, 'g-o', label='mAP', linewidth=1.5, markersize=3)
-        ax.set_xlabel('Epoch')
-        ax.set_ylabel('mAP')
-        ax.set_title('Mean Average Precision')
+        ax.plot(epochs, mAP_vals, "g-o", label="mAP", linewidth=1.5, markersize=3)
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("mAP")
+        ax.set_title("Mean Average Precision")
         ax.legend()
         ax.grid(True, alpha=0.3)
         plot_idx += 1
@@ -318,11 +329,11 @@ def plot_training_curves(
     for i in range(plot_idx, len(axes)):
         axes[i].set_visible(False)
 
-    plt.suptitle('Training Progress', fontsize=14, fontweight='bold')
+    plt.suptitle("Training Progress", fontsize=14, fontweight="bold")
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=150, bbox_inches='tight')
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
         plt.close(fig)
         return None
 
@@ -404,12 +415,16 @@ def create_comparison_grid(
                 label = int(gt_labels[i][j]) if gt_labels is not None else 0
                 color = COLORS[label % len(COLORS)]
                 rect = patches.Rectangle(
-                    (x1, y1), x2 - x1, y2 - y1,
-                    linewidth=2, edgecolor=color, facecolor='none',
+                    (x1, y1),
+                    x2 - x1,
+                    y2 - y1,
+                    linewidth=2,
+                    edgecolor=color,
+                    facecolor="none",
                 )
                 ax_gt.add_patch(rect)
-        ax_gt.set_title(f'GT #{i}', fontsize=10)
-        ax_gt.axis('off')
+        ax_gt.set_title(f"GT #{i}", fontsize=10)
+        ax_gt.axis("off")
 
         # Predictions
         ax_pred = axes[row, col_pred]
@@ -418,12 +433,17 @@ def create_comparison_grid(
         p_masks = pred_masks[i] if pred_masks is not None else None
 
         annotated = draw_detections(
-            img, pred_boxes[i], p_scores, p_labels,
-            masks=p_masks, threshold=threshold, class_names=class_names,
+            img,
+            pred_boxes[i],
+            p_scores,
+            p_labels,
+            masks=p_masks,
+            threshold=threshold,
+            class_names=class_names,
         )
         ax_pred.imshow(annotated.astype(np.float32) / 255.0 if annotated.max() > 1 else annotated)
-        ax_pred.set_title(f'Pred #{i}', fontsize=10)
-        ax_pred.axis('off')
+        ax_pred.set_title(f"Pred #{i}", fontsize=10)
+        ax_pred.axis("off")
 
     # Hide unused axes
     for row in range(axes.shape[0]):
@@ -431,11 +451,11 @@ def create_comparison_grid(
             if row * cols + col >= n * 2:
                 axes[row, col].set_visible(False)
 
-    plt.suptitle('Ground Truth vs Predictions', fontsize=14, fontweight='bold')
+    plt.suptitle("Ground Truth vs Predictions", fontsize=14, fontweight="bold")
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=150, bbox_inches='tight')
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
         plt.close(fig)
         return None
 

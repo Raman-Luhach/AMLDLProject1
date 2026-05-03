@@ -11,9 +11,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 
 
-def compute_iou_matrix(
-    boxes_a: np.ndarray, boxes_b: np.ndarray
-) -> np.ndarray:
+def compute_iou_matrix(boxes_a: np.ndarray, boxes_b: np.ndarray) -> np.ndarray:
     """Compute pairwise IoU between two sets of axis-aligned boxes.
 
     Args:
@@ -210,9 +208,9 @@ def compute_detection_metrics(
             pred = predictions[img_idx]
             gt = ground_truths[img_idx]
 
-            pred_boxes = np.asarray(pred.get('boxes', np.zeros((0, 4))), dtype=np.float64)
-            pred_scores = np.asarray(pred.get('scores', np.zeros(0)), dtype=np.float64)
-            gt_boxes = np.asarray(gt.get('boxes', np.zeros((0, 4))), dtype=np.float64)
+            pred_boxes = np.asarray(pred.get("boxes", np.zeros((0, 4))), dtype=np.float64)
+            pred_scores = np.asarray(pred.get("scores", np.zeros(0)), dtype=np.float64)
+            gt_boxes = np.asarray(gt.get("boxes", np.zeros((0, 4))), dtype=np.float64)
 
             # Limit detections
             if len(pred_scores) > max_detections:
@@ -222,15 +220,13 @@ def compute_detection_metrics(
 
             total_gt += len(gt_boxes)
 
-            tp_fp = match_predictions_single_image(
-                pred_boxes, pred_scores, gt_boxes, iou_thresh
-            )
+            tp_fp = match_predictions_single_image(pred_boxes, pred_scores, gt_boxes, iou_thresh)
 
             all_scores.append(pred_scores)
             all_tp_fp.append(tp_fp)
 
         if total_gt == 0:
-            results[f'AP@{iou_thresh:.2f}'] = 0.0
+            results[f"AP@{iou_thresh:.2f}"] = 0.0
             ap_values.append(0.0)
             ar_values.append(0.0)
             continue
@@ -248,23 +244,21 @@ def compute_detection_metrics(
         ap = average_precision(recalls, precisions)
         ar = float(recalls[-1]) if len(recalls) > 0 else 0.0
 
-        results[f'AP@{iou_thresh:.2f}'] = ap
+        results[f"AP@{iou_thresh:.2f}"] = ap
         ap_values.append(ap)
         ar_values.append(ar)
 
-    results['AP_mean'] = float(np.mean(ap_values)) if ap_values else 0.0
-    results['AR_mean'] = float(np.mean(ar_values)) if ar_values else 0.0
+    results["AP_mean"] = float(np.mean(ap_values)) if ap_values else 0.0
+    results["AR_mean"] = float(np.mean(ar_values)) if ar_values else 0.0
 
-    ap_m = results['AP_mean']
-    ar_m = results['AR_mean']
-    results['F1_mean'] = (
-        2.0 * ap_m * ar_m / (ap_m + ar_m) if (ap_m + ar_m) > 0 else 0.0
-    )
+    ap_m = results["AP_mean"]
+    ar_m = results["AR_mean"]
+    results["F1_mean"] = 2.0 * ap_m * ar_m / (ap_m + ar_m) if (ap_m + ar_m) > 0 else 0.0
 
     return results
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Quick self-test with synthetic data
     print("=== Detection Metrics Self-Test ===\n")
 
@@ -281,7 +275,7 @@ if __name__ == '__main__':
 
         # Add some noise to create predictions
         n_pred = rng.randint(5, 25)
-        pred_boxes = gt_boxes[:min(n_pred, n_gt)].copy()
+        pred_boxes = gt_boxes[: min(n_pred, n_gt)].copy()
         pred_boxes += rng.normal(0, 5, pred_boxes.shape)
         if n_pred > n_gt:
             extra = rng.uniform(0, 500, (n_pred - n_gt, 4))
@@ -291,18 +285,23 @@ if __name__ == '__main__':
 
         pred_scores = rng.uniform(0.1, 1.0, len(pred_boxes))
 
-        preds.append({
-            'boxes': pred_boxes,
-            'scores': pred_scores,
-            'labels': np.ones(len(pred_boxes), dtype=np.int64),
-        })
-        gts.append({
-            'boxes': gt_boxes,
-            'labels': np.ones(n_gt, dtype=np.int64),
-        })
+        preds.append(
+            {
+                "boxes": pred_boxes,
+                "scores": pred_scores,
+                "labels": np.ones(len(pred_boxes), dtype=np.int64),
+            }
+        )
+        gts.append(
+            {
+                "boxes": gt_boxes,
+                "labels": np.ones(n_gt, dtype=np.int64),
+            }
+        )
 
     metrics = compute_detection_metrics(
-        preds, gts,
+        preds,
+        gts,
         iou_thresholds=[0.5, 0.75],
     )
 

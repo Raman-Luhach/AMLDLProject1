@@ -93,9 +93,9 @@ class FPN(nn.Module):
             List of 5 feature tensors [P3, P4, P5, P6, P7], all with
             `out_channels` channels, at decreasing spatial resolutions.
         """
-        c3 = features['C3']
-        c4 = features['C4']
-        c5 = features['C5']
+        c3 = features["C3"]
+        c4 = features["C4"]
+        c5 = features["C5"]
 
         # Lateral connections
         lat_c5 = self.lateral_c5(c5)
@@ -104,9 +104,9 @@ class FPN(nn.Module):
 
         # Top-down pathway with element-wise addition
         # Upsample lat_c5 to match lat_c4 spatial size
-        p4 = lat_c4 + F.interpolate(lat_c5, size=lat_c4.shape[2:], mode='bilinear', align_corners=False)
+        p4 = lat_c4 + F.interpolate(lat_c5, size=lat_c4.shape[2:], mode="bilinear", align_corners=False)
         # Upsample merged p4 to match lat_c3 spatial size
-        p3 = lat_c3 + F.interpolate(p4, size=lat_c3.shape[2:], mode='bilinear', align_corners=False)
+        p3 = lat_c3 + F.interpolate(p4, size=lat_c3.shape[2:], mode="bilinear", align_corners=False)
 
         # Apply smoothing convolutions + CBAM attention
         p3 = self.cbam_p3(self.smooth_p3(p3))
@@ -120,17 +120,17 @@ class FPN(nn.Module):
         return [p3, p4, p5, p6, p7]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Verify FPN output shapes
-    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
 
     # Simulate backbone outputs for 550x550 input
     in_channels = [40, 112, 960]
     features = {
-        'C3': torch.randn(1, 40, 69, 69, device=device),
-        'C4': torch.randn(1, 112, 35, 35, device=device),
-        'C5': torch.randn(1, 960, 18, 18, device=device),
+        "C3": torch.randn(1, 40, 69, 69, device=device),
+        "C4": torch.randn(1, 112, 35, 35, device=device),
+        "C5": torch.randn(1, 960, 18, 18, device=device),
     }
 
     fpn = FPN(in_channels_list=in_channels, out_channels=256).to(device)

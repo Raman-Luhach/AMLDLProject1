@@ -33,9 +33,9 @@ logger = logging.getLogger(__name__)
 
 # Density buckets for per-density analysis
 DENSITY_BUCKETS = {
-    'low': (0, 50),
-    'medium': (50, 150),
-    'high': (150, float('inf')),
+    "low": (0, 50),
+    "medium": (50, 150),
+    "high": (150, float("inf")),
 }
 
 
@@ -54,28 +54,28 @@ class AblationFramework:
 
     # Define ablation variants and what to disable
     VARIANTS = {
-        'full_hybrid': {},
-        'dl_only': {
-            'disable_spatial_attention': True,
-            'disable_recalibrator': True,
+        "full_hybrid": {},
+        "dl_only": {
+            "disable_spatial_attention": True,
+            "disable_recalibrator": True,
         },
-        'no_recalibrator': {
-            'disable_recalibrator': True,
+        "no_recalibrator": {
+            "disable_recalibrator": True,
         },
-        'no_spatial_attention': {
-            'disable_spatial_attention': True,
+        "no_spatial_attention": {
+            "disable_spatial_attention": True,
         },
-        'no_row_model': {
-            'disable_gmm': True,
+        "no_row_model": {
+            "disable_gmm": True,
         },
-        'no_density_field': {
-            'disable_kde': True,
+        "no_density_field": {
+            "disable_kde": True,
         },
-        'hard_nms': {
-            'use_hard_nms': True,
+        "hard_nms": {
+            "use_hard_nms": True,
         },
-        'no_cbam': {
-            'disable_cbam': True,
+        "no_cbam": {
+            "disable_cbam": True,
         },
     }
 
@@ -84,7 +84,7 @@ class AblationFramework:
         model: nn.Module,
         data_loader: DataLoader,
         device: torch.device,
-        output_dir: str = 'results/ablation',
+        output_dir: str = "results/ablation",
     ) -> None:
         self.model = model
         self.data_loader = data_loader
@@ -110,24 +110,27 @@ class AblationFramework:
             metrics = self._evaluate_variant(name, config, iou_threshold)
             elapsed = time.time() - start
 
-            metrics['eval_time'] = elapsed
+            metrics["eval_time"] = elapsed
             results[name] = metrics
 
             logger.info(
                 "  %s: mAP@0.5=%.4f, AR@100=%.4f, F1=%.4f (%.1fs)",
-                name, metrics['mAP_50'], metrics['AR_100'],
-                metrics['F1'], elapsed
+                name,
+                metrics["mAP_50"],
+                metrics["AR_100"],
+                metrics["F1"],
+                elapsed,
             )
 
         # Compute deltas relative to full hybrid
-        if 'full_hybrid' in results:
-            baseline = results['full_hybrid']
+        if "full_hybrid" in results:
+            baseline = results["full_hybrid"]
             for name, metrics in results.items():
-                if name == 'full_hybrid':
+                if name == "full_hybrid":
                     continue
-                results[name]['delta_mAP_50'] = metrics['mAP_50'] - baseline['mAP_50']
-                results[name]['delta_AR_100'] = metrics['AR_100'] - baseline['AR_100']
-                results[name]['delta_F1'] = metrics['F1'] - baseline['F1']
+                results[name]["delta_mAP_50"] = metrics["mAP_50"] - baseline["mAP_50"]
+                results[name]["delta_AR_100"] = metrics["AR_100"] - baseline["AR_100"]
+                results[name]["delta_F1"] = metrics["F1"] - baseline["F1"]
 
         # Save results
         self._save_results(results)
@@ -169,35 +172,35 @@ class AblationFramework:
                 detections = self.model(images)
 
                 for i, (det, target) in enumerate(zip(detections, targets)):
-                    gt_boxes = target['boxes'].numpy()
+                    gt_boxes = target["boxes"].numpy()
                     n_gt = len(gt_boxes)
                     per_image_density.append(n_gt)
 
-                    pred_boxes = det['boxes'].cpu().numpy()
-                    pred_scores = det['scores'].cpu().numpy()
+                    pred_boxes = det["boxes"].cpu().numpy()
+                    pred_scores = det["scores"].cpu().numpy()
 
-                    all_predictions.append({
-                        'boxes': pred_boxes,
-                        'scores': pred_scores,
-                    })
-                    all_targets.append({
-                        'boxes': gt_boxes,
-                        'n_objects': n_gt,
-                    })
+                    all_predictions.append(
+                        {
+                            "boxes": pred_boxes,
+                            "scores": pred_scores,
+                        }
+                    )
+                    all_targets.append(
+                        {
+                            "boxes": gt_boxes,
+                            "n_objects": n_gt,
+                        }
+                    )
 
         # Restore original state
         self._restore_state(original_state)
 
         # Compute metrics
-        metrics = self._compute_metrics(
-            all_predictions, all_targets, iou_threshold
-        )
+        metrics = self._compute_metrics(all_predictions, all_targets, iou_threshold)
 
         # Per-density analysis
-        density_metrics = self._per_density_analysis(
-            all_predictions, all_targets, per_image_density, iou_threshold
-        )
-        metrics['density_analysis'] = density_metrics
+        density_metrics = self._per_density_analysis(all_predictions, all_targets, per_image_density, iou_threshold)
+        metrics["density_analysis"] = density_metrics
 
         return metrics
 
@@ -205,35 +208,35 @@ class AblationFramework:
         """Apply ablation by modifying model components. Returns original state."""
         original = {}
 
-        if config.get('disable_spatial_attention'):
-            original['gate'] = self.model.spatial_attention.gate.data.clone()
+        if config.get("disable_spatial_attention"):
+            original["gate"] = self.model.spatial_attention.gate.data.clone()
             # Set gate to large negative → sigmoid(gate) ≈ 0
             self.model.spatial_attention.gate.data = torch.tensor(-100.0)
 
-        if config.get('disable_recalibrator'):
-            original['recalibrator_state'] = True
+        if config.get("disable_recalibrator"):
+            original["recalibrator_state"] = True
             # Monkey-patch recalibrator to return original scores
             self.model._recalibrator_disabled = True
 
-        if config.get('disable_gmm'):
-            original['gmm_fitted'] = self.model.spatial_engine.is_fitted
+        if config.get("disable_gmm"):
+            original["gmm_fitted"] = self.model.spatial_engine.is_fitted
             # Override spatial features to zeros
             self.model._gmm_disabled = True
 
-        if config.get('disable_kde'):
-            original['kde_disabled'] = False
+        if config.get("disable_kde"):
+            original["kde_disabled"] = False
             self.model._kde_disabled = True
 
-        if config.get('use_hard_nms'):
-            if hasattr(self.model.yolact, 'detect'):
-                original['nms_sigma'] = self.model.yolact.detect.nms_sigma
+        if config.get("use_hard_nms"):
+            if hasattr(self.model.yolact, "detect"):
+                original["nms_sigma"] = self.model.yolact.detect.nms_sigma
                 self.model.yolact.detect.nms_sigma = 0.0  # hard NMS
 
-        if config.get('disable_cbam'):
-            if hasattr(self.model.yolact.fpn, 'cbam_modules'):
-                original['cbam_modules'] = []
+        if config.get("disable_cbam"):
+            if hasattr(self.model.yolact.fpn, "cbam_modules"):
+                original["cbam_modules"] = []
                 for cbam in self.model.yolact.fpn.cbam_modules:
-                    original['cbam_modules'].append(cbam.training)
+                    original["cbam_modules"].append(cbam.training)
                     # Set CBAM to identity by zeroing weights
                     self.model._cbam_disabled = True
 
@@ -241,22 +244,22 @@ class AblationFramework:
 
     def _restore_state(self, original: Dict[str, Any]) -> None:
         """Restore model to original state after ablation."""
-        if 'gate' in original:
-            self.model.spatial_attention.gate.data = original['gate']
+        if "gate" in original:
+            self.model.spatial_attention.gate.data = original["gate"]
 
-        if 'recalibrator_state' in original:
+        if "recalibrator_state" in original:
             self.model._recalibrator_disabled = False
 
-        if 'gmm_fitted' in original:
+        if "gmm_fitted" in original:
             self.model._gmm_disabled = False
 
-        if 'kde_disabled' in original:
+        if "kde_disabled" in original:
             self.model._kde_disabled = False
 
-        if 'nms_sigma' in original:
-            self.model.yolact.detect.nms_sigma = original['nms_sigma']
+        if "nms_sigma" in original:
+            self.model.yolact.detect.nms_sigma = original["nms_sigma"]
 
-        if 'cbam_modules' in original:
+        if "cbam_modules" in original:
             self.model._cbam_disabled = False
 
     def _compute_metrics(
@@ -273,9 +276,9 @@ class AblationFramework:
         all_matches = []
 
         for pred, target in zip(predictions, targets):
-            pred_boxes = pred['boxes']
-            pred_scores = pred['scores']
-            gt_boxes = target['boxes']
+            pred_boxes = pred["boxes"]
+            pred_scores = pred["scores"]
+            gt_boxes = target["boxes"]
 
             if len(pred_boxes) == 0:
                 all_fn += len(gt_boxes)
@@ -326,14 +329,14 @@ class AblationFramework:
         ar_100 = recall  # Simplified: using all detections
 
         return {
-            'mAP_50': ap,
-            'AR_100': ar_100,
-            'precision': precision,
-            'recall': recall,
-            'F1': f1,
-            'TP': all_tp,
-            'FP': all_fp,
-            'FN': all_fn,
+            "mAP_50": ap,
+            "AR_100": ar_100,
+            "precision": precision,
+            "recall": recall,
+            "F1": f1,
+            "TP": all_tp,
+            "FP": all_fp,
+            "FN": all_fn,
         }
 
     def _per_density_analysis(
@@ -362,17 +365,14 @@ class AblationFramework:
                     bucket_targets[bucket_name],
                     iou_threshold,
                 )
-                metrics['n_images'] = len(bucket_preds[bucket_name])
+                metrics["n_images"] = len(bucket_preds[bucket_name])
                 density_metrics[bucket_name] = metrics
             else:
-                density_metrics[bucket_name] = {
-                    'mAP_50': 0.0, 'AR_100': 0.0, 'F1': 0.0, 'n_images': 0
-                }
+                density_metrics[bucket_name] = {"mAP_50": 0.0, "AR_100": 0.0, "F1": 0.0, "n_images": 0}
 
         return density_metrics
 
-    def _compute_ap(self, scores: List[float], matches: List[int],
-                    total_gt: int) -> float:
+    def _compute_ap(self, scores: List[float], matches: List[int], total_gt: int) -> float:
         """Compute average precision from score-match pairs."""
         if not scores or total_gt == 0:
             return 0.0
@@ -432,7 +432,7 @@ class AblationFramework:
     def _save_results(self, results: Dict[str, Any]) -> None:
         """Save ablation results to JSON and generate summary."""
         # Save full results
-        json_path = self.output_dir / 'ablation_results.json'
+        json_path = self.output_dir / "ablation_results.json"
 
         # Convert numpy types for JSON serialization
         def convert(obj):
@@ -446,7 +446,7 @@ class AblationFramework:
 
         serializable = json.loads(json.dumps(results, default=convert))
 
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(serializable, f, indent=2)
         logger.info("Ablation results saved to %s", json_path)
 
@@ -464,8 +464,8 @@ class AblationFramework:
             if name not in results:
                 continue
             m = results[name]
-            delta = m.get('delta_mAP_50', 0.0)
-            delta_str = f"{delta:+.4f}" if name != 'full_hybrid' else "baseline"
+            delta = m.get("delta_mAP_50", 0.0)
+            delta_str = f"{delta:+.4f}" if name != "full_hybrid" else "baseline"
             summary_lines.append(
                 f"{name:<25} {m['mAP_50']:>10.4f} {m['AR_100']:>10.4f} "
                 f"{m['precision']:>10.4f} {m['recall']:>10.4f} {m['F1']:>10.4f} "
@@ -477,8 +477,8 @@ class AblationFramework:
         # Per-density summary
         summary_lines.append("PER-DENSITY ANALYSIS (Full Hybrid)")
         summary_lines.append("-" * 60)
-        if 'full_hybrid' in results and 'density_analysis' in results['full_hybrid']:
-            for bucket, metrics in results['full_hybrid']['density_analysis'].items():
+        if "full_hybrid" in results and "density_analysis" in results["full_hybrid"]:
+            for bucket, metrics in results["full_hybrid"]["density_analysis"].items():
                 summary_lines.append(
                     f"  {bucket:>8}: mAP={metrics['mAP_50']:.4f} "
                     f"F1={metrics['F1']:.4f} "
@@ -489,6 +489,6 @@ class AblationFramework:
         logger.info("\n%s", summary)
 
         # Save summary
-        summary_path = self.output_dir / 'ablation_summary.txt'
-        with open(summary_path, 'w') as f:
+        summary_path = self.output_dir / "ablation_summary.txt"
+        with open(summary_path, "w") as f:
             f.write(summary)

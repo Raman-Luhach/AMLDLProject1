@@ -36,52 +36,65 @@ from src.utils.helpers import get_device
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    datefmt='%H:%M:%S',
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        description='Export YOLACT: ONNX export, quantization, and benchmarking.'
+    parser = argparse.ArgumentParser(description="Export YOLACT: ONNX export, quantization, and benchmarking.")
+    parser.add_argument(
+        "--checkpoint",
+        type=str,
+        default=None,
+        help="Path to model checkpoint (.pth). Auto-detected if omitted.",
     )
     parser.add_argument(
-        '--checkpoint', type=str, default=None,
-        help='Path to model checkpoint (.pth). Auto-detected if omitted.',
+        "--untrained",
+        action="store_true",
+        help="Use untrained model (random weights) for testing.",
     )
     parser.add_argument(
-        '--untrained', action='store_true',
-        help='Use untrained model (random weights) for testing.',
+        "--output-dir",
+        type=str,
+        default="results/deployment",
+        help="Directory for saving deployment artifacts.",
     )
     parser.add_argument(
-        '--output-dir', type=str, default='results/deployment',
-        help='Directory for saving deployment artifacts.',
+        "--input-size",
+        type=int,
+        default=550,
+        help="Input spatial dimension.",
     )
     parser.add_argument(
-        '--input-size', type=int, default=550,
-        help='Input spatial dimension.',
+        "--opset",
+        type=int,
+        default=11,
+        help="ONNX opset version.",
     )
     parser.add_argument(
-        '--opset', type=int, default=11,
-        help='ONNX opset version.',
+        "--skip-quantize",
+        action="store_true",
+        help="Skip INT8 quantization step.",
     )
     parser.add_argument(
-        '--skip-quantize', action='store_true',
-        help='Skip INT8 quantization step.',
+        "--skip-benchmark",
+        action="store_true",
+        help="Skip benchmarking step.",
     )
     parser.add_argument(
-        '--skip-benchmark', action='store_true',
-        help='Skip benchmarking step.',
+        "--num-warmup",
+        type=int,
+        default=10,
+        help="Number of warmup iterations for benchmarking.",
     )
     parser.add_argument(
-        '--num-warmup', type=int, default=10,
-        help='Number of warmup iterations for benchmarking.',
-    )
-    parser.add_argument(
-        '--num-runs', type=int, default=50,
-        help='Number of timed iterations for benchmarking.',
+        "--num-runs",
+        type=int,
+        default=50,
+        help="Number of timed iterations for benchmarking.",
     )
     return parser.parse_args()
 
@@ -93,11 +106,11 @@ def find_checkpoint() -> str:
         Path to the checkpoint file, or empty string if not found.
     """
     search_dirs = [
-        str(PROJECT_ROOT / 'weights'),
-        str(PROJECT_ROOT / 'checkpoints'),
-        str(PROJECT_ROOT / 'results' / 'training'),
+        str(PROJECT_ROOT / "weights"),
+        str(PROJECT_ROOT / "checkpoints"),
+        str(PROJECT_ROOT / "results" / "training"),
     ]
-    preferred = ['best.pth', 'best_model.pth', 'latest.pth', 'checkpoint.pth']
+    preferred = ["best.pth", "best_model.pth", "latest.pth", "checkpoint.pth"]
 
     for d in search_dirs:
         if not os.path.isdir(d):
@@ -107,9 +120,9 @@ def find_checkpoint() -> str:
             if os.path.isfile(path):
                 return path
         for fname in sorted(os.listdir(d)):
-            if fname.endswith('.pth'):
+            if fname.endswith(".pth"):
                 return os.path.join(d, fname)
-    return ''
+    return ""
 
 
 def main() -> None:
@@ -132,13 +145,13 @@ def main() -> None:
         if checkpoint_path:
             logger.info(f"Auto-detected checkpoint: {checkpoint_path}")
 
-    config = {**DEFAULT_CONFIG, 'pretrained_backbone': not args.untrained}
+    config = {**DEFAULT_CONFIG, "pretrained_backbone": not args.untrained}
     model = YOLACT(config=config)
 
     if checkpoint_path and os.path.isfile(checkpoint_path) and not args.untrained:
         logger.info(f"Loading checkpoint: {checkpoint_path}")
-        ckpt = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-        state = ckpt.get('model_state_dict', ckpt)
+        ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        state = ckpt.get("model_state_dict", ckpt)
         model.load_state_dict(state, strict=False)
         logger.info("Checkpoint loaded.")
     elif args.untrained:
@@ -156,7 +169,7 @@ def main() -> None:
     print("Step 2/4: ONNX Export")
     print("=" * 60)
 
-    onnx_fp32_path = os.path.join(args.output_dir, 'yolact.onnx')
+    onnx_fp32_path = os.path.join(args.output_dir, "yolact.onnx")
     export_success = export_to_onnx(
         model,
         output_path=onnx_fp32_path,
@@ -166,7 +179,7 @@ def main() -> None:
 
     if not export_success:
         logger.warning("ONNX export failed. Checking for fallback file...")
-        fallback = onnx_fp32_path.replace('.onnx', '_backbone_fpn.onnx')
+        fallback = onnx_fp32_path.replace(".onnx", "_backbone_fpn.onnx")
         if os.path.isfile(fallback):
             onnx_fp32_path = fallback
             export_success = True
@@ -183,7 +196,7 @@ def main() -> None:
         if export_success and os.path.isfile(onnx_fp32_path):
             onnx_int8_path = quantize_model(
                 input_path=onnx_fp32_path,
-                method='dynamic',
+                method="dynamic",
             )
             if onnx_int8_path is None:
                 logger.warning("Quantization failed.")
@@ -209,11 +222,11 @@ def main() -> None:
 
         onnx_models = {}
         if export_success and os.path.isfile(onnx_fp32_path):
-            onnx_models['ONNX FP32'] = onnx_fp32_path
+            onnx_models["ONNX FP32"] = onnx_fp32_path
         if onnx_int8_path and os.path.isfile(onnx_int8_path):
-            onnx_models['ONNX INT8'] = onnx_int8_path
+            onnx_models["ONNX INT8"] = onnx_int8_path
 
-        benchmark_output = os.path.join(args.output_dir, 'benchmark.json')
+        benchmark_output = os.path.join(args.output_dir, "benchmark.json")
         benchmark_results = benchmark_inference(
             model_paths=onnx_models,
             pytorch_model=model,
@@ -231,18 +244,18 @@ def main() -> None:
     pipeline_time = time.time() - pipeline_start
 
     summary = {
-        'checkpoint': checkpoint_path or 'none',
-        'untrained': args.untrained,
-        'total_params': total_params,
-        'onnx_export': export_success,
-        'onnx_fp32_path': onnx_fp32_path if export_success else None,
-        'onnx_int8_path': onnx_int8_path,
-        'benchmark_results': benchmark_results,
-        'pipeline_time_s': round(pipeline_time, 1),
+        "checkpoint": checkpoint_path or "none",
+        "untrained": args.untrained,
+        "total_params": total_params,
+        "onnx_export": export_success,
+        "onnx_fp32_path": onnx_fp32_path if export_success else None,
+        "onnx_int8_path": onnx_int8_path,
+        "benchmark_results": benchmark_results,
+        "pipeline_time_s": round(pipeline_time, 1),
     }
 
-    summary_path = os.path.join(args.output_dir, 'deployment_summary.json')
-    with open(summary_path, 'w') as f:
+    summary_path = os.path.join(args.output_dir, "deployment_summary.json")
+    with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2, default=str)
 
     print("\n" + "=" * 60)
@@ -266,5 +279,5 @@ def main() -> None:
     print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

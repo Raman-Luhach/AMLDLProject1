@@ -11,27 +11,27 @@ from src.models.confidence_recalibrator import ConfidenceRecalibrator
 
 @pytest.fixture
 def device():
-    return torch.device('cpu')
+    return torch.device("cpu")
 
 
 @pytest.fixture
 def hybrid_config():
     return {
-        'spatial_reasoning': {
-            'num_row_components': 4,
-            'kde_bandwidth': 0.1,
-            'min_detections': 2,
-            'save_dir': '/tmp/test_spatial',
+        "spatial_reasoning": {
+            "num_row_components": 4,
+            "kde_bandwidth": 0.1,
+            "min_detections": 2,
+            "save_dir": "/tmp/test_spatial",
         },
-        'recalibrator': {
-            'spatial_dim': 8,
-            'visual_dim': 64,
-            'hidden_dims': [64, 32],
-            'dropout': 0.1,
+        "recalibrator": {
+            "spatial_dim": 8,
+            "visual_dim": 64,
+            "hidden_dims": [64, 32],
+            "dropout": 0.1,
         },
-        'spatial_attention': {
-            'gate_init': 0.1,
-            'conv_channels': 8,
+        "spatial_attention": {
+            "gate_init": 0.1,
+            "conv_channels": 8,
         },
     }
 
@@ -39,14 +39,14 @@ def hybrid_config():
 @pytest.fixture
 def yolact_config():
     return {
-        'input_size': 550,
-        'num_classes': 2,
-        'pretrained_backbone': False,
-        'fpn_out_channels': 256,
-        'num_prototypes': 32,
-        'conf_threshold': 0.05,
-        'nms_sigma': 0.5,
-        'max_detections': 100,
+        "input_size": 550,
+        "num_classes": 2,
+        "pretrained_backbone": False,
+        "fpn_out_channels": 256,
+        "num_prototypes": 32,
+        "conf_threshold": 0.05,
+        "nms_sigma": 0.5,
+        "max_detections": 100,
     }
 
 
@@ -141,11 +141,11 @@ class TestHybridDetector:
             hybrid_config=hybrid_config,
         ).to(device)
         params = model.count_parameters()
-        assert params['total'] > 0
-        assert params['trainable'] > 0
-        assert 'yolact' in params
-        assert 'spatial_attention' in params
-        assert 'recalibrator' in params
+        assert params["total"] > 0
+        assert params["trainable"] > 0
+        assert "yolact" in params
+        assert "spatial_attention" in params
+        assert "recalibrator" in params
 
     def test_freeze_unfreeze(self, yolact_config, hybrid_config, device):
         model = HybridDetector(
@@ -176,21 +176,23 @@ class TestHybridDetector:
         model.train()
 
         images = torch.randn(1, 3, 550, 550, device=device)
-        targets = [{
-            'boxes': torch.tensor([[100, 100, 200, 200], [300, 300, 400, 400]], dtype=torch.float32, device=device),
-            'labels': torch.tensor([1, 1], dtype=torch.long, device=device),
-            'masks': torch.zeros(2, 550, 550, dtype=torch.uint8, device=device),
-        }]
+        targets = [
+            {
+                "boxes": torch.tensor([[100, 100, 200, 200], [300, 300, 400, 400]], dtype=torch.float32, device=device),
+                "labels": torch.tensor([1, 1], dtype=torch.long, device=device),
+                "masks": torch.zeros(2, 550, 550, dtype=torch.uint8, device=device),
+            }
+        ]
 
         output = model(images, targets)
-        assert 'class_preds' in output
-        assert 'box_preds' in output
-        assert 'mask_coeffs' in output
-        assert 'prototypes' in output
-        assert 'anchors' in output
-        assert 'spatial_features' in output
-        assert 'density_maps' in output
-        assert 'gate_value' in output
+        assert "class_preds" in output
+        assert "box_preds" in output
+        assert "mask_coeffs" in output
+        assert "prototypes" in output
+        assert "anchors" in output
+        assert "spatial_features" in output
+        assert "density_maps" in output
+        assert "gate_value" in output
 
     def test_inference_forward(self, yolact_config, hybrid_config, device):
         model = HybridDetector(
@@ -206,5 +208,5 @@ class TestHybridDetector:
 
         assert isinstance(output, list)
         assert len(output) == 1
-        assert 'boxes' in output[0]
-        assert 'scores' in output[0]
+        assert "boxes" in output[0]
+        assert "scores" in output[0]

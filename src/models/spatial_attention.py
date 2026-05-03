@@ -61,15 +61,14 @@ class SpatialPriorAttention(nn.Module):
         """Initialize convolution weights."""
         for m in self.density_encoder.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
 
-    def forward(self, fpn_feature: torch.Tensor,
-                density_map: torch.Tensor) -> torch.Tensor:
+    def forward(self, fpn_feature: torch.Tensor, density_map: torch.Tensor) -> torch.Tensor:
         """Apply spatial prior attention to FPN features.
 
         The output is a residual modulation:
@@ -91,10 +90,7 @@ class SpatialPriorAttention(nn.Module):
 
         # Resize density map to match FPN spatial dimensions
         if density_map.shape[-2:] != (H, W):
-            density_map = F.interpolate(
-                density_map, size=(H, W),
-                mode='bilinear', align_corners=False
-            )
+            density_map = F.interpolate(density_map, size=(H, W), mode="bilinear", align_corners=False)
 
         # Encode density into attention map
         attention = self.density_encoder(density_map)  # (B, 1, H, W)

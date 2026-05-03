@@ -136,7 +136,7 @@ class Detect:
             masks = F.interpolate(
                 masks.unsqueeze(1),
                 size=(mask_size, mask_size),
-                mode='bilinear',
+                mode="bilinear",
                 align_corners=False,
             ).squeeze(1)
 
@@ -257,10 +257,10 @@ class Detect:
         proto_h, proto_w = prototypes.shape[1], prototypes.shape[2]
 
         empty_result = {
-            'boxes': torch.zeros(0, 4, device=device),
-            'scores': torch.zeros(0, device=device),
-            'labels': torch.zeros(0, dtype=torch.long, device=device),
-            'masks': torch.zeros(0, proto_h, proto_w, device=device),
+            "boxes": torch.zeros(0, 4, device=device),
+            "scores": torch.zeros(0, device=device),
+            "labels": torch.zeros(0, dtype=torch.long, device=device),
+            "masks": torch.zeros(0, proto_h, proto_w, device=device),
         }
 
         # Get foreground class scores (skip background at index 0)
@@ -299,7 +299,8 @@ class Detect:
             cls_coeffs = det_coeffs[cls_mask]
 
             kept_boxes, kept_scores, keep_idx = soft_nms(
-                cls_boxes, cls_scores,
+                cls_boxes,
+                cls_scores,
                 sigma=self.nms_sigma,
                 score_threshold=self.conf_threshold,
             )
@@ -307,10 +308,7 @@ class Detect:
             if kept_boxes.size(0) > 0:
                 all_boxes.append(kept_boxes)
                 all_scores.append(kept_scores)
-                all_labels.append(
-                    torch.full((kept_boxes.size(0),), cls.item(),
-                               dtype=torch.long, device=device)
-                )
+                all_labels.append(torch.full((kept_boxes.size(0),), cls.item(), dtype=torch.long, device=device))
                 all_coeffs.append(cls_coeffs[keep_idx])
 
         if len(all_boxes) == 0:
@@ -333,23 +331,25 @@ class Detect:
         final_masks = self.assemble_masks(prototypes, final_coeffs, final_boxes)
 
         return {
-            'boxes': final_boxes,
-            'scores': final_scores,
-            'labels': final_labels,
-            'masks': final_masks,
+            "boxes": final_boxes,
+            "scores": final_scores,
+            "labels": final_labels,
+            "masks": final_masks,
         }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Quick test of core components
     print("Testing Detect post-processor components...")
 
     # Test box decoding
     print("\n--- Box Decoding ---")
-    anchors = torch.tensor([
-        [0.5, 0.5, 0.2, 0.2],  # cx, cy, w, h
-        [0.3, 0.3, 0.1, 0.1],
-    ])
+    anchors = torch.tensor(
+        [
+            [0.5, 0.5, 0.2, 0.2],  # cx, cy, w, h
+            [0.3, 0.3, 0.1, 0.1],
+        ]
+    )
     box_preds = torch.zeros(1, 2, 4)  # Zero offsets -> anchor positions
     decoded = Detect.decode_boxes(box_preds, anchors)
     print(f"Anchors (cx,cy,w,h):\n  {anchors}")
@@ -360,11 +360,13 @@ if __name__ == '__main__':
     print("\n--- Mask Assembly ---")
     prototypes = torch.randn(32, 138, 138)
     coeffs = torch.randn(3, 32)
-    boxes = torch.tensor([
-        [0.1, 0.1, 0.5, 0.5],
-        [0.3, 0.3, 0.7, 0.7],
-        [0.5, 0.5, 0.9, 0.9],
-    ])
+    boxes = torch.tensor(
+        [
+            [0.1, 0.1, 0.5, 0.5],
+            [0.3, 0.3, 0.7, 0.7],
+            [0.5, 0.5, 0.9, 0.9],
+        ]
+    )
     masks = Detect.assemble_masks(prototypes, coeffs, boxes)
     print(f"Prototype shape: {prototypes.shape}")
     print(f"Coefficients shape: {coeffs.shape}")
@@ -373,7 +375,5 @@ if __name__ == '__main__':
 
     # Test empty case
     print("\n--- Empty Input ---")
-    empty_masks = Detect.assemble_masks(
-        prototypes, torch.zeros(0, 32), torch.zeros(0, 4)
-    )
+    empty_masks = Detect.assemble_masks(prototypes, torch.zeros(0, 32), torch.zeros(0, 4))
     print(f"Empty result shape: {empty_masks.shape}")

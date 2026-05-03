@@ -24,7 +24,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 def quantize_model(
     input_path: str,
     output_path: Optional[str] = None,
-    method: str = 'dynamic',
+    method: str = "dynamic",
 ) -> Optional[str]:
     """Quantize an ONNX model to INT8.
 
@@ -47,22 +47,19 @@ def quantize_model(
         base, ext = os.path.splitext(input_path)
         output_path = f"{base}_int8{ext}"
 
-    os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
     try:
         from onnxruntime.quantization import quantize_dynamic, QuantType
     except ImportError:
-        logger.error(
-            "onnxruntime.quantization not available. "
-            "Install with: pip install onnxruntime"
-        )
+        logger.error("onnxruntime.quantization not available. " "Install with: pip install onnxruntime")
         return None
 
     logger.info(f"Quantizing {input_path} -> {output_path}")
     logger.info(f"Method: {method}")
 
     try:
-        if method == 'dynamic':
+        if method == "dynamic":
             quantize_dynamic(
                 model_input=input_path,
                 model_output=output_path,
@@ -95,27 +92,32 @@ def quantize_model(
     return output_path
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s [%(levelname)s] %(message)s',
-        datefmt='%H:%M:%S',
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        datefmt="%H:%M:%S",
     )
 
-    parser = argparse.ArgumentParser(description='Quantize ONNX model to INT8')
+    parser = argparse.ArgumentParser(description="Quantize ONNX model to INT8")
     parser.add_argument(
-        '--input', type=str,
-        default='results/deployment/yolact.onnx',
-        help='Path to the FP32 ONNX model.',
+        "--input",
+        type=str,
+        default="results/deployment/yolact.onnx",
+        help="Path to the FP32 ONNX model.",
     )
     parser.add_argument(
-        '--output', type=str, default=None,
-        help='Output path for quantized model. Auto-derived if omitted.',
+        "--output",
+        type=str,
+        default=None,
+        help="Output path for quantized model. Auto-derived if omitted.",
     )
     parser.add_argument(
-        '--method', type=str, default='dynamic',
-        choices=['dynamic'],
-        help='Quantization method.',
+        "--method",
+        type=str,
+        default="dynamic",
+        choices=["dynamic"],
+        help="Quantization method.",
     )
     args = parser.parse_args()
 

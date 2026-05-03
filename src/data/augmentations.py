@@ -74,12 +74,8 @@ def jaccard_numpy(boxes_a: np.ndarray, boxes_b: np.ndarray) -> np.ndarray:
         iou: (N, M) array of IoU values
     """
     inter = intersect(boxes_a, boxes_b)
-    area_a = (
-        (boxes_a[:, 2] - boxes_a[:, 0]) * (boxes_a[:, 3] - boxes_a[:, 1])
-    )  # (N,)
-    area_b = (
-        (boxes_b[:, 2] - boxes_b[:, 0]) * (boxes_b[:, 3] - boxes_b[:, 1])
-    )  # (M,)
+    area_a = (boxes_a[:, 2] - boxes_a[:, 0]) * (boxes_a[:, 3] - boxes_a[:, 1])  # (N,)
+    area_b = (boxes_b[:, 2] - boxes_b[:, 0]) * (boxes_b[:, 3] - boxes_b[:, 1])  # (M,)
 
     union = area_a[:, np.newaxis] + area_b[np.newaxis, :] - inter
     return inter / np.maximum(union, 1e-6)
@@ -119,9 +115,7 @@ def random_horizontal_flip(
     return image, boxes, labels
 
 
-def random_brightness(
-    image: np.ndarray, delta: float = 32.0
-) -> np.ndarray:
+def random_brightness(image: np.ndarray, delta: float = 32.0) -> np.ndarray:
     """Randomly adjust brightness by adding a uniform random value."""
     if np.random.random() < 0.5:
         d = np.random.uniform(-delta, delta)
@@ -130,9 +124,7 @@ def random_brightness(
     return image
 
 
-def random_contrast(
-    image: np.ndarray, lower: float = 0.5, upper: float = 1.5
-) -> np.ndarray:
+def random_contrast(image: np.ndarray, lower: float = 0.5, upper: float = 1.5) -> np.ndarray:
     """Randomly adjust contrast by multiplying by a uniform random factor."""
     if np.random.random() < 0.5:
         factor = np.random.uniform(lower, upper)
@@ -141,9 +133,7 @@ def random_contrast(
     return image
 
 
-def random_saturation(
-    image: np.ndarray, lower: float = 0.5, upper: float = 1.5
-) -> np.ndarray:
+def random_saturation(image: np.ndarray, lower: float = 0.5, upper: float = 1.5) -> np.ndarray:
     """Randomly adjust saturation in HSV space."""
     if np.random.random() < 0.5:
         hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV).astype(np.float32)
@@ -291,9 +281,7 @@ def random_crop(
         left = np.random.uniform(0, w - crop_w)
         top = np.random.uniform(0, h - crop_h)
 
-        crop_rect = np.array(
-            [[left, top, left + crop_w, top + crop_h]], dtype=np.float32
-        )
+        crop_rect = np.array([[left, top, left + crop_w, top + crop_h]], dtype=np.float32)
 
         # Compute IoU between crop and all boxes
         iou = jaccard_numpy(crop_rect, boxes)  # (1, N)
@@ -333,9 +321,7 @@ def random_crop(
         new_boxes[:, 3] = np.clip(new_boxes[:, 3] - top, 0, crop_h)
 
         # Remove degenerate boxes
-        valid = (new_boxes[:, 2] > new_boxes[:, 0] + 1) & (
-            new_boxes[:, 3] > new_boxes[:, 1] + 1
-        )
+        valid = (new_boxes[:, 2] > new_boxes[:, 0] + 1) & (new_boxes[:, 3] > new_boxes[:, 1] + 1)
         if not valid.any():
             continue
 
@@ -606,23 +592,16 @@ if __name__ == "__main__":
     print("\n--- Individual Augmentation Tests ---")
 
     # Test flip
-    flipped_img, flipped_boxes, _ = random_horizontal_flip(
-        image.copy(), boxes.copy(), labels.copy(), p=1.0
-    )
+    flipped_img, flipped_boxes, _ = random_horizontal_flip(image.copy(), boxes.copy(), labels.copy(), p=1.0)
     print(f"Flip: output shape {flipped_img.shape}")
 
     # Test expand
-    expanded_img, expanded_boxes, _ = random_expand(
-        image.copy(), boxes.copy(), labels.copy(), p=1.0
-    )
+    expanded_img, expanded_boxes, _ = random_expand(image.copy(), boxes.copy(), labels.copy(), p=1.0)
     print(f"Expand: {image.shape} -> {expanded_img.shape}")
 
     # Test crop
-    cropped_img, cropped_boxes, cropped_labels = random_crop(
-        image.copy(), boxes.copy(), labels.copy()
-    )
-    print(f"Crop: {image.shape} -> {cropped_img.shape}, "
-          f"{len(boxes)} -> {len(cropped_boxes)} boxes")
+    cropped_img, cropped_boxes, cropped_labels = random_crop(image.copy(), boxes.copy(), labels.copy())
+    print(f"Crop: {image.shape} -> {cropped_img.shape}, " f"{len(boxes)} -> {len(cropped_boxes)} boxes")
 
     # Test IoU computation
     iou = jaccard_numpy(boxes[:2], boxes[2:])

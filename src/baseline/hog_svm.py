@@ -116,9 +116,7 @@ class HOGSVMBaseline:
     # Training data preparation
     # ------------------------------------------------------------------
 
-    def prepare_training_data(
-        self, images, annotations, num_pos=5000, num_neg=10000
-    ):
+    def prepare_training_data(self, images, annotations, num_pos=5000, num_neg=10000):
         """Build training set of HOG feature vectors.
 
         Parameters
@@ -177,9 +175,7 @@ class HOGSVMBaseline:
                 py = rng.randint(0, max(1, h_img - ph))
 
                 # Check IoU with all GT boxes -- keep only if low overlap
-                if len(boxes) > 0 and self._max_iou(
-                    np.array([px, py, px + pw, py + ph]), boxes
-                ) > 0.3:
+                if len(boxes) > 0 and self._max_iou(np.array([px, py, px + pw, py + ph]), boxes) > 0.3:
                     continue
 
                 crop = img[py : py + ph, px : px + pw]
@@ -195,9 +191,7 @@ class HOGSVMBaseline:
         neg_features = np.array(neg_features)
 
         X_train = np.vstack([pos_features, neg_features])
-        y_train = np.concatenate(
-            [np.ones(len(pos_features)), np.zeros(len(neg_features))]
-        )
+        y_train = np.concatenate([np.ones(len(pos_features)), np.zeros(len(neg_features))])
 
         # Shuffle
         perm = rng.permutation(len(y_train))
@@ -222,8 +216,10 @@ class HOGSVMBaseline:
         -------
         train_accuracy : float
         """
-        print(f"  Training SVM on {len(y_train)} samples "
-              f"({int(y_train.sum())} pos, {int(len(y_train) - y_train.sum())} neg) ...")
+        print(
+            f"  Training SVM on {len(y_train)} samples "
+            f"({int(y_train.sum())} pos, {int(len(y_train) - y_train.sum())} neg) ..."
+        )
         X_scaled = self.scaler.fit_transform(X_train)
         self.svm.fit(X_scaled, y_train)
         self.is_trained = True
@@ -235,9 +231,7 @@ class HOGSVMBaseline:
     # Detection
     # ------------------------------------------------------------------
 
-    def sliding_window(
-        self, image, scales=(1.0, 0.75, 0.5, 0.35), step_size=16
-    ):
+    def sliding_window(self, image, scales=(1.0, 0.75, 0.5, 0.35), step_size=16):
         """Run multi-scale sliding window detection.
 
         Parameters
@@ -261,9 +255,7 @@ class HOGSVMBaseline:
         win_w, win_h = self.window_size
 
         for scale in scales:
-            resized = cv2.resize(
-                image, None, fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR
-            )
+            resized = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_LINEAR)
             h_r, w_r = resized.shape[:2]
 
             if h_r < win_h or w_r < win_w:

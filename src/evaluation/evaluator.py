@@ -45,9 +45,7 @@ class COCOEvaluator:
             max_detections: Maximum detection counts for AR computation.
         """
         if iou_thresholds is None:
-            self.iou_thresholds = [
-                round(0.5 + i * 0.05, 2) for i in range(10)
-            ]  # [0.50, 0.55, ..., 0.95]
+            self.iou_thresholds = [round(0.5 + i * 0.05, 2) for i in range(10)]  # [0.50, 0.55, ..., 0.95]
         else:
             self.iou_thresholds = sorted(iou_thresholds)
 
@@ -110,15 +108,15 @@ class COCOEvaluator:
 
         # Per-threshold AP
         for iou_thresh, ap in ap_per_threshold.items():
-            results[f'AP@{iou_thresh:.2f}'] = ap
+            results[f"AP@{iou_thresh:.2f}"] = ap
 
         # Standard COCO summary metrics
-        results['AP@0.50'] = ap_per_threshold.get(0.5, 0.0)
-        results['AP@0.75'] = ap_per_threshold.get(0.75, 0.0)
-        results['AP@[.50:.95]'] = float(np.mean(list(ap_per_threshold.values())))
+        results["AP@0.50"] = ap_per_threshold.get(0.5, 0.0)
+        results["AP@0.75"] = ap_per_threshold.get(0.75, 0.0)
+        results["AP@[.50:.95]"] = float(np.mean(list(ap_per_threshold.values())))
 
         for max_det, ar in ar_per_maxdet.items():
-            results[f'AR@{max_det}'] = ar
+            results[f"AR@{max_det}"] = ar
 
         return results
 
@@ -149,15 +147,13 @@ class COCOEvaluator:
             pred = predictions[img_idx]
             gt = ground_truths[img_idx]
 
-            pred_boxes = pred['boxes']
-            pred_scores = pred['scores']
-            gt_boxes = gt['boxes']
+            pred_boxes = pred["boxes"]
+            pred_scores = pred["scores"]
+            gt_boxes = gt["boxes"]
 
             total_gt += len(gt_boxes)
 
-            tp_fp = match_predictions_single_image(
-                pred_boxes, pred_scores, gt_boxes, iou_threshold
-            )
+            tp_fp = match_predictions_single_image(pred_boxes, pred_scores, gt_boxes, iou_threshold)
 
             all_scores.append(pred_scores)
             all_tp_fp.append(tp_fp)
@@ -176,9 +172,7 @@ class COCOEvaluator:
         all_scores_arr = all_scores_arr[sorted_idx]
         all_tp_fp_arr = all_tp_fp_arr[sorted_idx]
 
-        recalls, precisions = precision_recall_curve(
-            all_scores_arr, all_tp_fp_arr, total_gt
-        )
+        recalls, precisions = precision_recall_curve(all_scores_arr, all_tp_fp_arr, total_gt)
 
         return average_precision(recalls, precisions)
 
@@ -209,9 +203,9 @@ class COCOEvaluator:
                 pred = predictions[img_idx]
                 gt = ground_truths[img_idx]
 
-                pred_boxes = pred['boxes']
-                pred_scores = pred['scores']
-                gt_boxes = gt['boxes']
+                pred_boxes = pred["boxes"]
+                pred_scores = pred["scores"]
+                gt_boxes = gt["boxes"]
 
                 num_gt = len(gt_boxes)
                 if num_gt == 0:
@@ -223,18 +217,14 @@ class COCOEvaluator:
                     pred_boxes = pred_boxes[top_k]
                     pred_scores = pred_scores[top_k]
 
-                tp_fp = match_predictions_single_image(
-                    pred_boxes, pred_scores, gt_boxes, iou_thresh
-                )
+                tp_fp = match_predictions_single_image(pred_boxes, pred_scores, gt_boxes, iou_thresh)
 
                 recall = float(np.sum(tp_fp)) / num_gt
                 recall_values.append(recall)
 
         return float(np.mean(recall_values)) if recall_values else 0.0
 
-    def compute_ap(
-        self, recalls: np.ndarray, precisions: np.ndarray
-    ) -> float:
+    def compute_ap(self, recalls: np.ndarray, precisions: np.ndarray) -> float:
         """Compute AP from a precision-recall curve.
 
         Delegates to the all-point interpolation implementation in metrics.py.
@@ -268,9 +258,7 @@ class COCOEvaluator:
         Returns:
             (N,) binary TP/FP array.
         """
-        return match_predictions_single_image(
-            pred_boxes, pred_scores, gt_boxes, iou_threshold
-        )
+        return match_predictions_single_image(pred_boxes, pred_scores, gt_boxes, iou_threshold)
 
     @staticmethod
     def _to_numpy(
@@ -288,7 +276,7 @@ class COCOEvaluator:
         for d in data:
             entry: Dict[str, np.ndarray] = {}
             for k, v in d.items():
-                if hasattr(v, 'cpu'):
+                if hasattr(v, "cpu"):
                     # PyTorch tensor
                     entry[k] = v.detach().cpu().numpy()
                 elif isinstance(v, np.ndarray):
@@ -298,12 +286,12 @@ class COCOEvaluator:
                 else:
                     entry[k] = np.asarray(v)
             # Ensure required keys exist with proper shapes
-            if 'boxes' not in entry:
-                entry['boxes'] = np.zeros((0, 4), dtype=np.float64)
-            if 'scores' not in entry:
-                entry['scores'] = np.zeros(0, dtype=np.float64)
-            if 'labels' not in entry:
-                entry['labels'] = np.zeros(0, dtype=np.int64)
+            if "boxes" not in entry:
+                entry["boxes"] = np.zeros((0, 4), dtype=np.float64)
+            if "scores" not in entry:
+                entry["scores"] = np.zeros(0, dtype=np.float64)
+            if "labels" not in entry:
+                entry["labels"] = np.zeros(0, dtype=np.int64)
             converted.append(entry)
         return converted
 
@@ -318,7 +306,7 @@ class COCOEvaluator:
         print("=" * 60)
 
         # Summary metrics
-        summary_keys = ['AP@[.50:.95]', 'AP@0.50', 'AP@0.75']
+        summary_keys = ["AP@[.50:.95]", "AP@0.50", "AP@0.75"]
         print("\n  Average Precision (AP):")
         for k in summary_keys:
             if k in results:
@@ -327,21 +315,21 @@ class COCOEvaluator:
         # AR metrics
         print("\n  Average Recall (AR):")
         for max_det in self.max_detections:
-            key = f'AR@{max_det}'
+            key = f"AR@{max_det}"
             if key in results:
                 print(f"    {key:<20s} = {results[key]:.4f}")
 
         # Per-threshold AP
         print("\n  Per-Threshold AP:")
         for iou_thresh in self.iou_thresholds:
-            key = f'AP@{iou_thresh:.2f}'
+            key = f"AP@{iou_thresh:.2f}"
             if key in results:
                 print(f"    {key:<20s} = {results[key]:.4f}")
 
         print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Self-test with synthetic data
     print("=== COCOEvaluator Self-Test ===\n")
 
@@ -371,20 +359,26 @@ if __name__ == '__main__':
             fp_boxes[:, 3] = fp_boxes[:, 1] + rng.uniform(30, 100, n_fp)
 
         pred_boxes = np.vstack([tp_boxes, fp_boxes])
-        pred_scores = np.concatenate([
-            rng.uniform(0.5, 1.0, n_tp),
-            rng.uniform(0.1, 0.5, n_fp),
-        ])
+        pred_scores = np.concatenate(
+            [
+                rng.uniform(0.5, 1.0, n_tp),
+                rng.uniform(0.1, 0.5, n_fp),
+            ]
+        )
 
-        predictions.append({
-            'boxes': pred_boxes,
-            'scores': pred_scores,
-            'labels': np.ones(len(pred_boxes), dtype=np.int64),
-        })
-        ground_truths.append({
-            'boxes': gt_boxes,
-            'labels': np.ones(n_gt, dtype=np.int64),
-        })
+        predictions.append(
+            {
+                "boxes": pred_boxes,
+                "scores": pred_scores,
+                "labels": np.ones(len(pred_boxes), dtype=np.int64),
+            }
+        )
+        ground_truths.append(
+            {
+                "boxes": gt_boxes,
+                "labels": np.ones(n_gt, dtype=np.int64),
+            }
+        )
 
     # Evaluate
     evaluator = COCOEvaluator()

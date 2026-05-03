@@ -14,10 +14,10 @@ from src.evaluation.metrics import (
 )
 
 __all__ = [
-    'COCOEvaluator',
-    'average_precision',
-    'compute_detection_metrics',
-    'compute_iou_matrix',
-    'match_predictions_single_image',
-    'precision_recall_curve',
+    "COCOEvaluator",
+    "average_precision",
+    "compute_detection_metrics",
+    "compute_iou_matrix",
+    "match_predictions_single_image",
+    "precision_recall_curve",
 ]

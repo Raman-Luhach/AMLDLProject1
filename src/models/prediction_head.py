@@ -56,19 +56,13 @@ class PredictionHead(nn.Module):
         )
 
         # Classification branch
-        self.class_conv = nn.Conv2d(
-            in_channels, num_anchors * num_classes, kernel_size=3, padding=1
-        )
+        self.class_conv = nn.Conv2d(in_channels, num_anchors * num_classes, kernel_size=3, padding=1)
 
         # Bounding box regression branch
-        self.box_conv = nn.Conv2d(
-            in_channels, num_anchors * 4, kernel_size=3, padding=1
-        )
+        self.box_conv = nn.Conv2d(in_channels, num_anchors * 4, kernel_size=3, padding=1)
 
         # Mask coefficient branch (tanh activation applied in forward)
-        self.mask_conv = nn.Conv2d(
-            in_channels, num_anchors * num_prototypes, kernel_size=3, padding=1
-        )
+        self.mask_conv = nn.Conv2d(in_channels, num_anchors * num_prototypes, kernel_size=3, padding=1)
 
         self._initialize_weights()
 
@@ -83,13 +77,12 @@ class PredictionHead(nn.Module):
         # Initialize classification bias with prior probability for better
         # initial training stability (focal loss style initialization)
         import math
+
         prior_prob = 0.01
         bias_value = -math.log((1 - prior_prob) / prior_prob)
         nn.init.constant_(self.class_conv.bias, bias_value)
 
-    def _forward_single_level(
-        self, feature: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _forward_single_level(self, feature: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Process a single FPN level through the prediction head.
 
         Args:
@@ -125,9 +118,7 @@ class PredictionHead(nn.Module):
 
         return class_pred, box_pred, mask_coeff
 
-    def forward(
-        self, fpn_features: List[torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def forward(self, fpn_features: List[torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Process all FPN levels and concatenate predictions.
 
         Args:
@@ -159,9 +150,9 @@ class PredictionHead(nn.Module):
         return class_preds, box_preds, mask_coeff_preds
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Verify PredictionHead output shapes
-    device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     print(f"Using device: {device}")
 
     head = PredictionHead(
@@ -173,9 +164,7 @@ if __name__ == '__main__':
 
     # Simulate FPN outputs for 550x550 input
     fpn_sizes = [(69, 69), (35, 35), (18, 18), (9, 9), (5, 5)]
-    fpn_features = [
-        torch.randn(1, 256, h, w, device=device) for h, w in fpn_sizes
-    ]
+    fpn_features = [torch.randn(1, 256, h, w, device=device) for h, w in fpn_sizes]
 
     with torch.no_grad():
         class_preds, box_preds, mask_coeff_preds = head(fpn_features)

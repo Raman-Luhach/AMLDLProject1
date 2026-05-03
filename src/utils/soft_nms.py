@@ -49,7 +49,7 @@ def soft_nms(
     scores: torch.Tensor,
     sigma: float = 0.5,
     score_threshold: float = 0.001,
-    method: str = 'gaussian',
+    method: str = "gaussian",
     iou_threshold: float = 0.3,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Apply Soft-NMS to a set of detections.
@@ -113,9 +113,9 @@ def soft_nms(
         ious = _compute_iou(boxes_work[max_idx], boxes_work)
 
         # Decay scores based on IoU
-        if method == 'gaussian':
-            decay = torch.exp(-(ious ** 2) / sigma)
-        elif method == 'linear':
+        if method == "gaussian":
+            decay = torch.exp(-(ious**2) / sigma)
+        elif method == "linear":
             decay = torch.ones_like(ious)
             high_iou = ious > iou_threshold
             decay[high_iou] = 1.0 - ious[high_iou]
@@ -204,7 +204,7 @@ def batched_soft_nms(
     labels: torch.Tensor,
     sigma: float = 0.5,
     score_threshold: float = 0.001,
-    method: str = 'gaussian',
+    method: str = "gaussian",
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """Apply Soft-NMS independently per class.
 
@@ -241,17 +241,17 @@ def batched_soft_nms(
         cls_scores = scores[cls_mask]
 
         kept_boxes, kept_scores, keep_idx = soft_nms(
-            cls_boxes, cls_scores, sigma=sigma,
-            score_threshold=score_threshold, method=method,
+            cls_boxes,
+            cls_scores,
+            sigma=sigma,
+            score_threshold=score_threshold,
+            method=method,
         )
 
         if kept_boxes.size(0) > 0:
             all_boxes.append(kept_boxes)
             all_scores.append(kept_scores)
-            all_labels.append(
-                torch.full((kept_boxes.size(0),), cls.item(),
-                           dtype=torch.long, device=device)
-            )
+            all_labels.append(torch.full((kept_boxes.size(0),), cls.item(), dtype=torch.long, device=device))
             all_indices.append(cls_indices[keep_idx])
 
     if len(all_boxes) == 0:
@@ -270,20 +270,23 @@ def batched_soft_nms(
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("=" * 60)
     print("Soft-NMS vs Hard-NMS Comparison")
     print("=" * 60)
 
     # Create test scenario with overlapping boxes
     # Two clusters of near-duplicate detections
-    boxes = torch.tensor([
-        [0.10, 0.10, 0.50, 0.50],  # Object 1, high score
-        [0.12, 0.12, 0.52, 0.52],  # Near-duplicate of Object 1
-        [0.15, 0.15, 0.55, 0.55],  # Another near-duplicate
-        [0.60, 0.60, 0.90, 0.90],  # Object 2, well separated
-        [0.62, 0.62, 0.92, 0.92],  # Near-duplicate of Object 2
-    ], dtype=torch.float32)
+    boxes = torch.tensor(
+        [
+            [0.10, 0.10, 0.50, 0.50],  # Object 1, high score
+            [0.12, 0.12, 0.52, 0.52],  # Near-duplicate of Object 1
+            [0.15, 0.15, 0.55, 0.55],  # Another near-duplicate
+            [0.60, 0.60, 0.90, 0.90],  # Object 2, well separated
+            [0.62, 0.62, 0.92, 0.92],  # Near-duplicate of Object 2
+        ],
+        dtype=torch.float32,
+    )
 
     scores = torch.tensor([0.95, 0.80, 0.70, 0.85, 0.65], dtype=torch.float32)
 
@@ -300,9 +303,7 @@ if __name__ == '__main__':
 
     # Soft NMS - Gaussian
     print("\n--- Soft NMS (Gaussian, sigma=0.5) ---")
-    soft_boxes_g, soft_scores_g, soft_idx_g = soft_nms(
-        boxes, scores, sigma=0.5, score_threshold=0.1, method='gaussian'
-    )
+    soft_boxes_g, soft_scores_g, soft_idx_g = soft_nms(boxes, scores, sigma=0.5, score_threshold=0.1, method="gaussian")
     print(f"Kept {soft_boxes_g.size(0)} detections:")
     for i in range(soft_boxes_g.size(0)):
         print(f"  Box {soft_idx_g[i].item()}: score: {soft_scores_g[i]:.4f}")
@@ -310,7 +311,7 @@ if __name__ == '__main__':
     # Soft NMS - Linear
     print("\n--- Soft NMS (Linear, iou_threshold=0.3) ---")
     soft_boxes_l, soft_scores_l, soft_idx_l = soft_nms(
-        boxes, scores, score_threshold=0.1, method='linear', iou_threshold=0.3
+        boxes, scores, score_threshold=0.1, method="linear", iou_threshold=0.3
     )
     print(f"Kept {soft_boxes_l.size(0)} detections:")
     for i in range(soft_boxes_l.size(0)):
@@ -319,16 +320,12 @@ if __name__ == '__main__':
     # Test batched soft NMS
     print("\n--- Batched Soft NMS (per-class) ---")
     labels = torch.tensor([0, 0, 0, 1, 1], dtype=torch.long)
-    b_boxes, b_scores, b_labels, b_idx = batched_soft_nms(
-        boxes, scores, labels, sigma=0.5, score_threshold=0.1
-    )
+    b_boxes, b_scores, b_labels, b_idx = batched_soft_nms(boxes, scores, labels, sigma=0.5, score_threshold=0.1)
     print(f"Kept {b_boxes.size(0)} detections:")
     for i in range(b_boxes.size(0)):
         print(f"  Box {b_idx[i].item()}: class={b_labels[i].item()}, score: {b_scores[i]:.4f}")
 
     # Edge case: empty input
     print("\n--- Edge case: empty input ---")
-    empty_b, empty_s, empty_i = soft_nms(
-        torch.zeros(0, 4), torch.zeros(0), sigma=0.5
-    )
+    empty_b, empty_s, empty_i = soft_nms(torch.zeros(0, 4), torch.zeros(0), sigma=0.5)
     print(f"Empty input result: boxes={empty_b.shape}, scores={empty_s.shape}")

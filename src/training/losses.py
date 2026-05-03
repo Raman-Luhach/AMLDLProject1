@@ -52,9 +52,7 @@ class FocalLoss(nn.Module):
         self.num_classes = num_classes
         self.label_smoothing = label_smoothing
 
-    def forward(
-        self, predictions: torch.Tensor, targets: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, predictions: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """Compute focal loss.
 
         Args:
@@ -72,16 +70,11 @@ class FocalLoss(nn.Module):
         probs = F.softmax(predictions, dim=-1)  # (N, num_classes)
 
         # One-hot encode targets
-        targets_one_hot = F.one_hot(
-            targets, num_classes=self.num_classes
-        ).float()  # (N, num_classes)
+        targets_one_hot = F.one_hot(targets, num_classes=self.num_classes).float()  # (N, num_classes)
 
         # Apply label smoothing
         if self.label_smoothing > 0:
-            targets_one_hot = (
-                targets_one_hot * (1.0 - self.label_smoothing)
-                + self.label_smoothing / self.num_classes
-            )
+            targets_one_hot = targets_one_hot * (1.0 - self.label_smoothing) + self.label_smoothing / self.num_classes
 
         # Gather the probability of the true class: p_t
         p_t = (probs * targets_one_hot).sum(dim=-1)  # (N,)
@@ -105,9 +98,7 @@ class FocalLoss(nn.Module):
         return loss.sum()
 
 
-def compute_iou_matrix(
-    boxes_a: torch.Tensor, boxes_b: torch.Tensor
-) -> torch.Tensor:
+def compute_iou_matrix(boxes_a: torch.Tensor, boxes_b: torch.Tensor) -> torch.Tensor:
     """Compute pairwise IoU between two sets of boxes in [x1, y1, x2, y2] format.
 
     Args:
@@ -271,7 +262,7 @@ class YOLACTLoss(nn.Module):
                 # Keep only the hardest negatives (highest classification loss)
                 # For simplicity, randomly sample max_neg negatives
                 neg_indices = neg_mask.nonzero(as_tuple=False).squeeze(1)
-                perm = torch.randperm(neg_indices.size(0), device=device)[:int(max_neg)]
+                perm = torch.randperm(neg_indices.size(0), device=device)[: int(max_neg)]
                 selected_neg = neg_indices[perm]
                 neg_mask = torch.zeros_like(neg_mask)
                 neg_mask[selected_neg] = True
@@ -327,9 +318,9 @@ class YOLACTLoss(nn.Module):
         total_pos = 0
 
         for b in range(batch_size):
-            gt_boxes = targets[b]['boxes'].to(device)    # (G, 4) absolute pixels
-            gt_labels = targets[b]['labels'].to(device)   # (G,)
-            gt_masks = targets[b]['masks'].to(device)     # (G, H, W) or (G, 550, 550)
+            gt_boxes = targets[b]["boxes"].to(device)  # (G, 4) absolute pixels
+            gt_labels = targets[b]["labels"].to(device)  # (G,)
+            gt_masks = targets[b]["masks"].to(device)  # (G, H, W) or (G, 550, 550)
 
             # Normalize GT boxes to [0, 1] to match anchor coordinate system
             gt_boxes_norm = gt_boxes / input_size
@@ -356,14 +347,14 @@ class YOLACTLoss(nn.Module):
 
             # --- Box Regression Loss ---
             # Encode matched GT boxes as offsets relative to anchors
-            pos_anchors = anchors[pos_mask]       # (P, 4) [cx, cy, w, h] normalized
+            pos_anchors = anchors[pos_mask]  # (P, 4) [cx, cy, w, h] normalized
             pos_gt_boxes = matched_gt_boxes[pos_mask]  # (P, 4) [x1,y1,x2,y2] normalized
 
             # encode_boxes expects gt in [x1,y1,x2,y2] and anchors in [cx,cy,w,h]
             gt_encoded = encode_boxes(pos_gt_boxes, pos_anchors)  # (P, 4)
             pred_encoded = box_preds[b][pos_mask]  # (P, 4)
 
-            box_loss = F.smooth_l1_loss(pred_encoded, gt_encoded, reduction='sum')
+            box_loss = F.smooth_l1_loss(pred_encoded, gt_encoded, reduction="sum")
             total_box_loss = total_box_loss + box_loss
 
             # --- Mask Segmentation Loss ---
@@ -384,9 +375,7 @@ class YOLACTLoss(nn.Module):
 
             # Get the GT index for each positive anchor
             # We need to find which GT each positive anchor was matched to
-            best_gt_iou_all, best_gt_idx_all = compute_iou_matrix(
-                anchors_xyxy, gt_boxes_norm
-            ).max(dim=1)
+            best_gt_iou_all, best_gt_idx_all = compute_iou_matrix(anchors_xyxy, gt_boxes_norm).max(dim=1)
             pos_gt_indices = best_gt_idx_all[pos_mask]  # (P,)
 
             if gt_masks.size(0) > 0 and gt_masks.dim() == 3:
@@ -394,9 +383,11 @@ class YOLACTLoss(nn.Module):
                 gt_masks_resized = F.interpolate(
                     gt_masks.unsqueeze(1).float(),
                     size=(proto_h, proto_w),
-                    mode='bilinear',
+                    mode="bilinear",
                     align_corners=False,
-                ).squeeze(1)  # (G, proto_H, proto_W)
+                ).squeeze(
+                    1
+                )  # (G, proto_H, proto_W)
 
                 # Select the GT mask for each positive anchor
                 pos_gt_masks = gt_masks_resized[pos_gt_indices]  # (P, proto_H, proto_W)
@@ -408,7 +399,7 @@ class YOLACTLoss(nn.Module):
                 # Create crop mask for each positive anchor
                 x_grid = torch.arange(proto_w, device=device).float() / proto_w
                 y_grid = torch.arange(proto_h, device=device).float() / proto_h
-                y_grid, x_grid = torch.meshgrid(y_grid, x_grid, indexing='ij')
+                y_grid, x_grid = torch.meshgrid(y_grid, x_grid, indexing="ij")
                 x_grid = x_grid.unsqueeze(0).expand(num_pos, -1, -1)  # (P, H, W)
                 y_grid = y_grid.unsqueeze(0).expand(num_pos, -1, -1)
 
@@ -428,7 +419,7 @@ class YOLACTLoss(nn.Module):
                 mask_loss = F.binary_cross_entropy_with_logits(
                     pred_masks_cropped,
                     gt_masks_cropped,
-                    reduction='none',
+                    reduction="none",
                 )
                 # Average loss within each mask's crop region, then sum over positives
                 # Avoid division by zero for empty crops
@@ -444,24 +435,22 @@ class YOLACTLoss(nn.Module):
 
         # Weighted total loss
         total_loss = (
-            self.cls_weight * cls_loss_norm
-            + self.box_weight * box_loss_norm
-            + self.mask_weight * mask_loss_norm
+            self.cls_weight * cls_loss_norm + self.box_weight * box_loss_norm + self.mask_weight * mask_loss_norm
         )
 
         return {
-            'total': total_loss,
-            'cls': cls_loss_norm.detach(),
-            'box': box_loss_norm.detach(),
-            'mask': mask_loss_norm.detach(),
+            "total": total_loss,
+            "cls": cls_loss_norm.detach(),
+            "box": box_loss_norm.detach(),
+            "mask": mask_loss_norm.detach(),
         }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """Test loss computation with synthetic data."""
     print("=== YOLACT Loss Test ===\n")
 
-    device = torch.device('cpu')
+    device = torch.device("cpu")
 
     # Simulate model outputs
     batch_size = 2
@@ -499,11 +488,13 @@ if __name__ == '__main__':
             y2 = int(gt_boxes[i, 3].item())
             gt_masks[i, y1:y2, x1:x2] = 1
 
-        targets.append({
-            'boxes': gt_boxes,
-            'labels': gt_labels,
-            'masks': gt_masks,
-        })
+        targets.append(
+            {
+                "boxes": gt_boxes,
+                "labels": gt_labels,
+                "masks": gt_masks,
+            }
+        )
 
     # Compute loss
     criterion = YOLACTLoss(num_classes=2)

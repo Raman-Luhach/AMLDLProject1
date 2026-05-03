@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -69,19 +70,21 @@ def set_plot_style():
         except OSError:
             plt.style.use("ggplot")
 
-    plt.rcParams.update({
-        "figure.dpi": DPI,
-        "savefig.dpi": DPI,
-        "font.size": 12,
-        "axes.titlesize": 14,
-        "axes.labelsize": 12,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "legend.fontsize": 10,
-        "figure.titlesize": 16,
-        "savefig.bbox": "tight",
-        "savefig.pad_inches": 0.15,
-    })
+    plt.rcParams.update(
+        {
+            "figure.dpi": DPI,
+            "savefig.dpi": DPI,
+            "font.size": 12,
+            "axes.titlesize": 14,
+            "axes.labelsize": 12,
+            "xtick.labelsize": 10,
+            "ytick.labelsize": 10,
+            "legend.fontsize": 10,
+            "figure.titlesize": 16,
+            "savefig.bbox": "tight",
+            "savefig.pad_inches": 0.15,
+        }
+    )
 
 
 def save_fig(fig, name):
@@ -108,15 +111,13 @@ def try_load_real_data():
         df = pd.read_csv(
             csv_path,
             header=None,
-            names=["image_name", "x1", "y1", "x2", "y2", "class",
-                   "image_width", "image_height"],
+            names=["image_name", "x1", "y1", "x2", "y2", "class", "image_width", "image_height"],
         )
         df["split"] = split
         dfs[split] = df
 
     combined = pd.concat(dfs.values(), ignore_index=True)
-    print(f"Loaded REAL dataset: {len(combined):,} annotations across "
-          f"{combined['image_name'].nunique():,} images")
+    print(f"Loaded REAL dataset: {len(combined):,} annotations across " f"{combined['image_name'].nunique():,} images")
     return combined
 
 
@@ -131,17 +132,11 @@ def generate_synthetic_data():
             image_width = np.random.choice([1024, 1280, 1920])
             image_height = np.random.choice([768, 1024, 1280])
 
-            n_objects = int(np.clip(
-                np.random.normal(147, 40), 5, 400
-            ))
+            n_objects = int(np.clip(np.random.normal(147, 40), 5, 400))
 
             # Generate box dimensions using lognormal
-            widths = np.random.lognormal(
-                mean=np.log(45), sigma=0.4, size=n_objects
-            ).clip(8, image_width * 0.3)
-            heights = np.random.lognormal(
-                mean=np.log(60), sigma=0.4, size=n_objects
-            ).clip(10, image_height * 0.4)
+            widths = np.random.lognormal(mean=np.log(45), sigma=0.4, size=n_objects).clip(8, image_width * 0.3)
+            heights = np.random.lognormal(mean=np.log(60), sigma=0.4, size=n_objects).clip(10, image_height * 0.4)
 
             # Place boxes with some structure (grid-like with noise)
             cols = int(np.sqrt(n_objects * image_width / image_height)) + 1
@@ -159,21 +154,22 @@ def generate_synthetic_data():
                 x2 = x1 + w
                 y2 = y1 + h
 
-                records.append({
-                    "image_name": image_name,
-                    "x1": round(float(x1), 1),
-                    "y1": round(float(y1), 1),
-                    "x2": round(float(x2), 1),
-                    "y2": round(float(y2), 1),
-                    "class": 1,
-                    "image_width": int(image_width),
-                    "image_height": int(image_height),
-                    "split": split,
-                })
+                records.append(
+                    {
+                        "image_name": image_name,
+                        "x1": round(float(x1), 1),
+                        "y1": round(float(y1), 1),
+                        "x2": round(float(x2), 1),
+                        "y2": round(float(y2), 1),
+                        "class": 1,
+                        "image_width": int(image_width),
+                        "image_height": int(image_height),
+                        "split": split,
+                    }
+                )
 
     df = pd.DataFrame(records)
-    print(f"Generated SYNTHETIC dataset: {len(df):,} annotations across "
-          f"{df['image_name'].nunique():,} images")
+    print(f"Generated SYNTHETIC dataset: {len(df):,} annotations across " f"{df['image_name'].nunique():,} images")
     return df
 
 
@@ -266,12 +262,9 @@ def plot_objects_per_image(df):
     counts = df.groupby("image_name").size()
 
     fig, ax = plt.subplots(figsize=FIGSIZE_SINGLE)
-    ax.hist(counts, bins=60, color=ACCENT, edgecolor="white", linewidth=0.5,
-            alpha=0.85)
-    ax.axvline(counts.mean(), color=ACCENT2, linestyle="--", linewidth=2,
-               label=f"Mean = {counts.mean():.1f}")
-    ax.axvline(counts.median(), color="#e7298a", linestyle=":", linewidth=2,
-               label=f"Median = {counts.median():.1f}")
+    ax.hist(counts, bins=60, color=ACCENT, edgecolor="white", linewidth=0.5, alpha=0.85)
+    ax.axvline(counts.mean(), color=ACCENT2, linestyle="--", linewidth=2, label=f"Mean = {counts.mean():.1f}")
+    ax.axvline(counts.median(), color="#e7298a", linestyle=":", linewidth=2, label=f"Median = {counts.median():.1f}")
     ax.set_xlabel("Number of Objects per Image")
     ax.set_ylabel("Frequency")
     ax.set_title("Distribution of Object Count per Image (SKU-110K)")
@@ -287,8 +280,7 @@ def plot_box_dimensions_scatter(df):
     sample = df.sample(n=min(50000, len(df)), random_state=42)
 
     fig, ax = plt.subplots(figsize=FIGSIZE_SINGLE)
-    ax.scatter(sample["norm_w"], sample["norm_h"],
-               s=1, alpha=0.15, color=ACCENT, rasterized=True)
+    ax.scatter(sample["norm_w"], sample["norm_h"], s=1, alpha=0.15, color=ACCENT, rasterized=True)
     ax.set_xlabel("Normalized Box Width (w / image_width)")
     ax.set_ylabel("Normalized Box Height (h / image_height)")
     ax.set_title("Ground-Truth Box Dimensions (Normalized)")
@@ -296,10 +288,20 @@ def plot_box_dimensions_scatter(df):
     ax.set_ylim(0, 0.5)
 
     # Marginal statistics
-    ax.axvline(sample["norm_w"].mean(), color=ACCENT2, linestyle="--",
-               alpha=0.7, label=f"Mean W = {sample['norm_w'].mean():.3f}")
-    ax.axhline(sample["norm_h"].mean(), color="#e7298a", linestyle="--",
-               alpha=0.7, label=f"Mean H = {sample['norm_h'].mean():.3f}")
+    ax.axvline(
+        sample["norm_w"].mean(),
+        color=ACCENT2,
+        linestyle="--",
+        alpha=0.7,
+        label=f"Mean W = {sample['norm_w'].mean():.3f}",
+    )
+    ax.axhline(
+        sample["norm_h"].mean(),
+        color="#e7298a",
+        linestyle="--",
+        alpha=0.7,
+        label=f"Mean H = {sample['norm_h'].mean():.3f}",
+    )
     ax.legend(loc="upper right", frameon=True)
     fig.tight_layout()
     save_fig(fig, "box_dimensions_scatter.png")
@@ -310,10 +312,8 @@ def plot_aspect_ratio_distribution(df):
     ar = df["aspect_ratio"].clip(upper=5.0)
 
     fig, ax = plt.subplots(figsize=FIGSIZE_SINGLE)
-    ax.hist(ar, bins=80, color=ACCENT, edgecolor="white", linewidth=0.5,
-            alpha=0.85, density=True)
-    ax.axvline(ar.median(), color=ACCENT2, linestyle="--", linewidth=2,
-               label=f"Median = {ar.median():.2f}")
+    ax.hist(ar, bins=80, color=ACCENT, edgecolor="white", linewidth=0.5, alpha=0.85, density=True)
+    ax.axvline(ar.median(), color=ACCENT2, linestyle="--", linewidth=2, label=f"Median = {ar.median():.2f}")
     ax.set_xlabel("Aspect Ratio (width / height)")
     ax.set_ylabel("Density")
     ax.set_title("Aspect Ratio Distribution of Ground-Truth Boxes")
@@ -328,14 +328,17 @@ def plot_box_area_distribution(df):
 
     fig, ax = plt.subplots(figsize=FIGSIZE_SINGLE)
     log_areas = np.log10(areas)
-    ax.hist(log_areas, bins=80, color=ACCENT, edgecolor="white",
-            linewidth=0.5, alpha=0.85)
+    ax.hist(log_areas, bins=80, color=ACCENT, edgecolor="white", linewidth=0.5, alpha=0.85)
     ax.set_xlabel("log10(Normalized Box Area)")
     ax.set_ylabel("Frequency")
     ax.set_title("Box Area Distribution (Log Scale)")
-    ax.axvline(np.log10(areas.median()), color=ACCENT2, linestyle="--",
-               linewidth=2,
-               label=f"Median area = {areas.median():.4f}")
+    ax.axvline(
+        np.log10(areas.median()),
+        color=ACCENT2,
+        linestyle="--",
+        linewidth=2,
+        label=f"Median area = {areas.median():.4f}",
+    )
     ax.legend(frameon=True)
     fig.tight_layout()
     save_fig(fig, "box_area_distribution.png")
@@ -345,9 +348,7 @@ def plot_pairwise_iou(df, n_sample_images=200):
     """Plot 5: IoU between GT boxes in the same image."""
     print("  Computing pairwise IoU (sampling images) ...")
     images = df["image_name"].unique()
-    sample_imgs = np.random.choice(images,
-                                   size=min(n_sample_images, len(images)),
-                                   replace=False)
+    sample_imgs = np.random.choice(images, size=min(n_sample_images, len(images)), replace=False)
 
     all_ious = []
     for img_name in sample_imgs:
@@ -379,13 +380,13 @@ def plot_pairwise_iou(df, n_sample_images=200):
         all_ious = np.array([0.0])
 
     fig, ax = plt.subplots(figsize=FIGSIZE_SINGLE)
-    ax.hist(all_ious, bins=100, color=ACCENT, edgecolor="white",
-            linewidth=0.5, alpha=0.85, density=True)
+    ax.hist(all_ious, bins=100, color=ACCENT, edgecolor="white", linewidth=0.5, alpha=0.85, density=True)
     ax.set_xlabel("Pairwise IoU")
     ax.set_ylabel("Density")
     ax.set_title(f"Pairwise IoU Between GT Boxes (Sampled {len(sample_imgs)} Images)")
-    ax.axvline(np.mean(all_ious), color=ACCENT2, linestyle="--", linewidth=2,
-               label=f"Mean IoU = {np.mean(all_ious):.3f}")
+    ax.axvline(
+        np.mean(all_ious), color=ACCENT2, linestyle="--", linewidth=2, label=f"Mean IoU = {np.mean(all_ious):.3f}"
+    )
     ax.legend(frameon=True)
     fig.tight_layout()
     save_fig(fig, "pairwise_iou_histogram.png")
@@ -423,10 +424,8 @@ def plot_anchor_kmeans(df):
 
     # Elbow plot
     ax = axes[0]
-    ax.plot(list(k_range), mean_ious, "o-", color=ACCENT, linewidth=2,
-            markersize=8)
-    ax.axvline(best_k, color=ACCENT2, linestyle="--", alpha=0.7,
-               label=f"k = {best_k}")
+    ax.plot(list(k_range), mean_ious, "o-", color=ACCENT, linewidth=2, markersize=8)
+    ax.axvline(best_k, color=ACCENT2, linestyle="--", alpha=0.7, label=f"k = {best_k}")
     ax.set_xlabel("Number of Clusters (k)")
     ax.set_ylabel("Mean IoU with Nearest Anchor")
     ax.set_title("K-Means Anchor Analysis (Elbow Plot)")
@@ -438,9 +437,14 @@ def plot_anchor_kmeans(df):
     colors = plt.cm.Set3(np.linspace(0, 1, best_k))
     for i, (w, h) in enumerate(best_clusters):
         rect = patches.Rectangle(
-            (-w / 2, -h / 2), w, h,
-            linewidth=2, edgecolor=colors[i], facecolor=colors[i],
-            alpha=0.35, label=f"({w:.3f}, {h:.3f})"
+            (-w / 2, -h / 2),
+            w,
+            h,
+            linewidth=2,
+            edgecolor=colors[i],
+            facecolor=colors[i],
+            alpha=0.35,
+            label=f"({w:.3f}, {h:.3f})",
         )
         ax.add_patch(rect)
     max_dim = max(best_clusters.max() * 1.2, 0.15)
@@ -450,8 +454,7 @@ def plot_anchor_kmeans(df):
     ax.set_xlabel("Normalized Width")
     ax.set_ylabel("Normalized Height")
     ax.set_title(f"Anchor Cluster Centers (k={best_k})")
-    ax.legend(fontsize=8, loc="upper left", frameon=True,
-              bbox_to_anchor=(1.02, 1.0))
+    ax.legend(fontsize=8, loc="upper left", frameon=True, bbox_to_anchor=(1.02, 1.0))
 
     fig.tight_layout()
     save_fig(fig, "anchor_kmeans_analysis.png")
@@ -468,8 +471,7 @@ def plot_sample_images(df):
     np.random.shuffle(sample_images)
     sample_images = sample_images[:8]
 
-    real_images_available = IMAGES_DIR.exists() and any(IMAGES_DIR.iterdir()) \
-        if IMAGES_DIR.exists() else False
+    real_images_available = IMAGES_DIR.exists() and any(IMAGES_DIR.iterdir()) if IMAGES_DIR.exists() else False
 
     for idx, img_name in enumerate(sample_images):
         ax = axes[idx]
@@ -483,6 +485,7 @@ def plot_sample_images(df):
             img_path = IMAGES_DIR / img_name
             if img_path.exists():
                 import matplotlib.image as mpimg
+
                 try:
                     img = mpimg.imread(str(img_path))
                     ax.imshow(img)
@@ -507,8 +510,10 @@ def plot_sample_images(df):
                 (row["x1"], row["y1"]),
                 row["x2"] - row["x1"],
                 row["y2"] - row["y1"],
-                linewidth=0.5, edgecolor=colors_cycle[j % 20],
-                facecolor="none", alpha=0.7,
+                linewidth=0.5,
+                edgecolor=colors_cycle[j % 20],
+                facecolor="none",
+                alpha=0.7,
             )
             ax.add_patch(rect)
 
@@ -518,8 +523,7 @@ def plot_sample_images(df):
         ax.set_yticks([])
 
     data_label = "Real" if real_images_available else "Synthetic"
-    fig.suptitle(f"Sample Images with Ground-Truth Boxes ({data_label} Data)",
-                 fontsize=14, fontweight="bold", y=1.01)
+    fig.suptitle(f"Sample Images with Ground-Truth Boxes ({data_label} Data)", fontsize=14, fontweight="bold", y=1.01)
     fig.tight_layout()
     save_fig(fig, "sample_images_with_annotations.png")
 
@@ -535,31 +539,42 @@ def plot_data_split_statistics(df):
     ax = axes[0]
     splits_ordered = ["train", "val", "test"]
     img_vals = [split_img_counts.get(s, 0) for s in splits_ordered]
-    bars = ax.bar(splits_ordered, img_vals,
-                  color=[PALETTE[0], PALETTE[1], PALETTE[2]],
-                  edgecolor="white", linewidth=1.5)
+    bars = ax.bar(
+        splits_ordered, img_vals, color=[PALETTE[0], PALETTE[1], PALETTE[2]], edgecolor="white", linewidth=1.5
+    )
     for bar, val in zip(bars, img_vals):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 50,
-                f"{val:,}", ha="center", va="bottom", fontweight="bold",
-                fontsize=11)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 50,
+            f"{val:,}",
+            ha="center",
+            va="bottom",
+            fontweight="bold",
+            fontsize=11,
+        )
     ax.set_ylabel("Number of Images")
     ax.set_title("Images per Data Split")
 
     # Annotations per split
     ax = axes[1]
     box_vals = [split_box_counts.get(s, 0) for s in splits_ordered]
-    bars = ax.bar(splits_ordered, box_vals,
-                  color=[PALETTE[0], PALETTE[1], PALETTE[2]],
-                  edgecolor="white", linewidth=1.5)
+    bars = ax.bar(
+        splits_ordered, box_vals, color=[PALETTE[0], PALETTE[1], PALETTE[2]], edgecolor="white", linewidth=1.5
+    )
     for bar, val in zip(bars, box_vals):
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1000,
-                f"{val:,}", ha="center", va="bottom", fontweight="bold",
-                fontsize=11)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 1000,
+            f"{val:,}",
+            ha="center",
+            va="bottom",
+            fontweight="bold",
+            fontsize=11,
+        )
     ax.set_ylabel("Number of Annotations")
     ax.set_title("Annotations per Data Split")
 
-    fig.suptitle("Dataset Split Statistics (SKU-110K)", fontsize=14,
-                 fontweight="bold")
+    fig.suptitle("Dataset Split Statistics (SKU-110K)", fontsize=14, fontweight="bold")
     fig.tight_layout()
     save_fig(fig, "data_split_statistics.png")
 
@@ -579,33 +594,16 @@ def save_anchor_config(clusters, mean_ious, k_range):
             "input_size": input_size,
             "best_k": len(clusters),
             "mean_iou_at_best_k": float(mean_ious[k_range.index(len(clusters))]),
-            "elbow_data": {
-                f"k{k}": float(miou) for k, miou in zip(k_range, mean_ious)
-            },
+            "elbow_data": {f"k{k}": float(miou) for k, miou in zip(k_range, mean_ious)},
         },
         "custom_anchors": {
-            "normalized": [
-                [round(float(w), 4), round(float(h), 4)]
-                for w, h in clusters
-            ],
-            "pixel_640": [
-                [round(w, 1), round(h, 1)]
-                for w, h in pixel_anchors
-            ],
+            "normalized": [[round(float(w), 4), round(float(h), 4)] for w, h in clusters],
+            "pixel_640": [[round(w, 1), round(h, 1)] for w, h in pixel_anchors],
         },
         "anchor_groups": {
-            "small": [
-                [round(float(w), 4), round(float(h), 4)]
-                for w, h in clusters[:3]
-            ],
-            "medium": [
-                [round(float(w), 4), round(float(h), 4)]
-                for w, h in clusters[3:6]
-            ],
-            "large": [
-                [round(float(w), 4), round(float(h), 4)]
-                for w, h in clusters[6:]
-            ],
+            "small": [[round(float(w), 4), round(float(h), 4)] for w, h in clusters[:3]],
+            "medium": [[round(float(w), 4), round(float(h), 4)] for w, h in clusters[3:6]],
+            "large": [[round(float(w), 4), round(float(h), 4)] for w, h in clusters[6:]],
         },
     }
 
@@ -637,28 +635,26 @@ def print_statistics(df):
         n_img = sdf["image_name"].nunique()
         n_ann = len(sdf)
         avg = n_ann / max(n_img, 1)
-        print(f"  {split:>5s}:  {n_img:>6,} images,  {n_ann:>10,} annotations  "
-              f"(avg {avg:.1f} obj/img)")
+        print(f"  {split:>5s}:  {n_img:>6,} images,  {n_ann:>10,} annotations  " f"(avg {avg:.1f} obj/img)")
 
     print()
     counts = df.groupby("image_name").size()
-    print(f"  Objects/image  min: {counts.min()},  max: {counts.max()},  "
-          f"mean: {counts.mean():.1f},  std: {counts.std():.1f}")
+    print(
+        f"  Objects/image  min: {counts.min()},  max: {counts.max()},  "
+        f"mean: {counts.mean():.1f},  std: {counts.std():.1f}"
+    )
 
-    print(f"\n  Normalized box width   mean: {df['norm_w'].mean():.4f},  "
-          f"std: {df['norm_w'].std():.4f}")
-    print(f"  Normalized box height  mean: {df['norm_h'].mean():.4f},  "
-          f"std: {df['norm_h'].std():.4f}")
-    print(f"  Aspect ratio (w/h)     mean: {df['aspect_ratio'].mean():.3f},  "
-          f"median: {df['aspect_ratio'].median():.3f}")
-    print(f"  Normalized area        mean: {df['norm_area'].mean():.5f},  "
-          f"median: {df['norm_area'].median():.5f}")
+    print(f"\n  Normalized box width   mean: {df['norm_w'].mean():.4f},  " f"std: {df['norm_w'].std():.4f}")
+    print(f"  Normalized box height  mean: {df['norm_h'].mean():.4f},  " f"std: {df['norm_h'].std():.4f}")
+    print(
+        f"  Aspect ratio (w/h)     mean: {df['aspect_ratio'].mean():.3f},  "
+        f"median: {df['aspect_ratio'].median():.3f}"
+    )
+    print(f"  Normalized area        mean: {df['norm_area'].mean():.5f},  " f"median: {df['norm_area'].median():.5f}")
 
     # Resolution distribution
     resolutions = df.groupby("image_name")[["image_width", "image_height"]].first()
-    res_str = resolutions.apply(
-        lambda r: f"{int(r['image_width'])}x{int(r['image_height'])}", axis=1
-    )
+    res_str = resolutions.apply(lambda r: f"{int(r['image_width'])}x{int(r['image_height'])}", axis=1)
     print(f"\n  Unique resolutions: {res_str.nunique()}")
     for res, cnt in res_str.value_counts().head(5).items():
         print(f"    {res}: {cnt:,} images")

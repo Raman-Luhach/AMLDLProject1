@@ -30,16 +30,16 @@ from src.utils.helpers import get_device
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    datefmt='%H:%M:%S',
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
 # Colors for drawing (BGR)
 COLORS = [
-    (0, 255, 0),    # green
-    (255, 0, 0),    # blue
-    (0, 0, 255),    # red
+    (0, 255, 0),  # green
+    (255, 0, 0),  # blue
+    (0, 0, 255),  # red
     (255, 255, 0),  # cyan
     (0, 255, 255),  # yellow
     (255, 0, 255),  # magenta
@@ -98,14 +98,15 @@ def draw_detections(image, detections, scale, score_threshold=0.01):
         annotated image, number of detections drawn
     """
     vis = image.copy()
-    boxes = detections.get('boxes', torch.tensor([]))
-    scores = detections.get('scores', torch.tensor([]))
+    boxes = detections.get("boxes", torch.tensor([]))
+    scores = detections.get("scores", torch.tensor([]))
 
     if len(boxes) == 0:
         logger.info("No detections found.")
         # Add text saying no detections
-        cv2.putText(vis, "No detections (model needs more training)",
-                    (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2)
+        cv2.putText(
+            vis, "No detections (model needs more training)", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 2
+        )
         return vis, 0
 
     # Move to CPU numpy
@@ -138,25 +139,23 @@ def draw_detections(image, detections, scale, score_threshold=0.01):
         label = f"{score:.2f}"
         (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
         cv2.rectangle(vis, (x1, y1 - th - 6), (x1 + tw + 4, y1), color, -1)
-        cv2.putText(vis, label, (x1 + 2, y1 - 4),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        cv2.putText(vis, label, (x1 + 2, y1 - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
     # Add summary text
-    cv2.putText(vis, f"Detections: {num_drawn}", (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
+    cv2.putText(vis, f"Detections: {num_drawn}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0), 2)
 
     return vis, num_drawn
 
 
 def load_model(checkpoint_path, device):
     """Load YOLACT model from checkpoint."""
-    config = {**DEFAULT_CONFIG, 'pretrained_backbone': False}
+    config = {**DEFAULT_CONFIG, "pretrained_backbone": False}
     model = YOLACT(config=config)
 
     if checkpoint_path and os.path.exists(checkpoint_path):
         logger.info(f"Loading checkpoint: {checkpoint_path}")
-        checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-        state_dict = checkpoint.get('model_state_dict', checkpoint)
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        state_dict = checkpoint.get("model_state_dict", checkpoint)
         model.load_state_dict(state_dict, strict=False)
         logger.info("Checkpoint loaded.")
     else:
@@ -195,7 +194,8 @@ def find_test_images(data_dir="data", num_images=5):
 def create_comparison_grid(results, output_path):
     """Create a grid of detection results for multiple images."""
     import matplotlib
-    matplotlib.use('Agg')
+
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     n = len(results)
@@ -212,35 +212,29 @@ def create_comparison_grid(results, output_path):
         # Convert BGR -> RGB for matplotlib
         ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
         ax.set_title(f"{Path(img_path).name}\n{num_det} detections", fontsize=10)
-        ax.axis('off')
+        ax.axis("off")
 
     # Hide empty axes
     for i in range(len(results), len(axes)):
-        axes[i].axis('off')
+        axes[i].axis("off")
 
-    plt.suptitle("YOLACT Detection Results (MobileNetV3-Large + Soft-NMS)",
-                 fontsize=14, fontweight='bold')
+    plt.suptitle("YOLACT Detection Results (MobileNetV3-Large + Soft-NMS)", fontsize=14, fontweight="bold")
     plt.tight_layout()
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(output_path, dpi=150, bbox_inches="tight")
     plt.close()
     logger.info(f"Saved grid to: {output_path}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='YOLACT Live Demo')
-    parser.add_argument('--image', type=str, default=None,
-                        help='Path to input image')
-    parser.add_argument('--test-images', type=int, default=None,
-                        help='Run on N random test images from the dataset')
-    parser.add_argument('--checkpoint', type=str,
-                        default='results/training/checkpoints/best_model.pth',
-                        help='Path to model checkpoint')
-    parser.add_argument('--output', type=str, default=None,
-                        help='Output image path (default: results/demo_output.png)')
-    parser.add_argument('--score-threshold', type=float, default=0.01,
-                        help='Minimum detection score to display')
-    parser.add_argument('--data-dir', type=str, default='data',
-                        help='Data directory (for --test-images mode)')
+    parser = argparse.ArgumentParser(description="YOLACT Live Demo")
+    parser.add_argument("--image", type=str, default=None, help="Path to input image")
+    parser.add_argument("--test-images", type=int, default=None, help="Run on N random test images from the dataset")
+    parser.add_argument(
+        "--checkpoint", type=str, default="results/training/checkpoints/best_model.pth", help="Path to model checkpoint"
+    )
+    parser.add_argument("--output", type=str, default=None, help="Output image path (default: results/demo_output.png)")
+    parser.add_argument("--score-threshold", type=float, default=0.01, help="Minimum detection score to display")
+    parser.add_argument("--data-dir", type=str, default="data", help="Data directory (for --test-images mode)")
     args = parser.parse_args()
 
     if args.image is None and args.test_images is None:
@@ -255,8 +249,8 @@ def main():
 
     if args.image:
         # Single image mode
-        output_path = args.output or 'results/demo_output.png'
-        os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
+        output_path = args.output or "results/demo_output.png"
+        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
         tensor, orig_image, scale = preprocess_image(args.image)
         tensor = tensor.to(device)
@@ -274,8 +268,8 @@ def main():
 
     elif args.test_images:
         # Multi-image mode
-        output_path = args.output or 'results/demo_grid.png'
-        os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
+        output_path = args.output or "results/demo_grid.png"
+        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
 
         image_paths = find_test_images(args.data_dir, args.test_images)
         if not image_paths:
@@ -313,5 +307,5 @@ def main():
     print("=" * 60)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

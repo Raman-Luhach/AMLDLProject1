@@ -26,7 +26,7 @@ class RecalibrationLoss(nn.Module):
     def __init__(self, iou_threshold: float = 0.5) -> None:
         super().__init__()
         self.iou_threshold = iou_threshold
-        self.bce = nn.BCELoss(reduction='mean')
+        self.bce = nn.BCELoss(reduction="mean")
 
     def forward(
         self,
@@ -45,8 +45,7 @@ class RecalibrationLoss(nn.Module):
             Scalar loss.
         """
         if len(pred_boxes) == 0 or len(gt_boxes) == 0:
-            return torch.tensor(0.0, device=recalibrated_scores.device,
-                              requires_grad=True)
+            return torch.tensor(0.0, device=recalibrated_scores.device, requires_grad=True)
 
         # Compute IoU between predictions and GT
         iou_matrix = self._compute_iou(pred_boxes, gt_boxes)
@@ -158,7 +157,7 @@ class SpatialConsistencyLoss(nn.Module):
 
         # Sample density at anchor locations
         density_at_anchors = F.grid_sample(
-            density_maps, grid, mode='bilinear', align_corners=False
+            density_maps, grid, mode="bilinear", align_corners=False
         )  # (B, 1, total_anchors, 1)
         density_at_anchors = density_at_anchors.squeeze(1).squeeze(-1)  # (B, total_anchors)
 
@@ -218,34 +217,31 @@ class HybridLoss(nn.Module):
         """
         # YOLACT base loss
         yolact_out = (
-            predictions['class_preds'],
-            predictions['box_preds'],
-            predictions['mask_coeffs'],
-            predictions['prototypes'],
-            predictions['anchors'],
+            predictions["class_preds"],
+            predictions["box_preds"],
+            predictions["mask_coeffs"],
+            predictions["prototypes"],
+            predictions["anchors"],
         )
         yolact_losses = self.yolact_loss(yolact_out, targets)
-        yolact_loss_val = yolact_losses['total']
+        yolact_loss_val = yolact_losses["total"]
 
         # Spatial consistency loss
         spatial_loss = self.spatial_consistency_loss(
-            predictions['class_preds'],
-            predictions.get('density_maps'),
-            predictions['anchors'],
+            predictions["class_preds"],
+            predictions.get("density_maps"),
+            predictions["anchors"],
         )
 
         # Total loss
-        total_loss = (
-            self.yolact_weight * yolact_loss_val
-            + self.spatial_consistency_weight * spatial_loss
-        )
+        total_loss = self.yolact_weight * yolact_loss_val + self.spatial_consistency_weight * spatial_loss
 
         return {
-            'total': total_loss,
-            'yolact': yolact_loss_val.detach(),
-            'spatial_consistency': spatial_loss.detach(),
-            'cls': yolact_losses.get('cls', torch.tensor(0.0)),
-            'box': yolact_losses.get('box', torch.tensor(0.0)),
-            'mask': yolact_losses.get('mask', torch.tensor(0.0)),
-            'gate_value': predictions.get('gate_value', 0.0),
+            "total": total_loss,
+            "yolact": yolact_loss_val.detach(),
+            "spatial_consistency": spatial_loss.detach(),
+            "cls": yolact_losses.get("cls", torch.tensor(0.0)),
+            "box": yolact_losses.get("box", torch.tensor(0.0)),
+            "mask": yolact_losses.get("mask", torch.tensor(0.0)),
+            "gate_value": predictions.get("gate_value", 0.0),
         }

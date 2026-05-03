@@ -13,9 +13,11 @@ import os
 import sys
 import time
 
+
 # Log to stderr so it doesn't mix with JSON stdout
 def log(msg):
     print(f"[inference:python] {msg}", file=sys.stderr, flush=True)
+
 
 log("Script started")
 t_start = time.time()
@@ -23,6 +25,7 @@ t_start = time.time()
 import cv2
 import numpy as np
 import torch
+
 log(f"Imports done ({time.time() - t_start:.1f}s)")
 
 # Add project root to path
@@ -31,6 +34,7 @@ sys.path.insert(0, project_root)
 
 from src.models.yolact import YOLACT, DEFAULT_CONFIG
 from src.data.augmentations import IMAGENET_MEAN, IMAGENET_STD
+
 log(f"Project modules imported ({time.time() - t_start:.1f}s)")
 
 
@@ -134,16 +138,18 @@ def main():
         if scores[i] < 0.05:
             continue
         x1, y1, x2, y2 = boxes[i]
-        results.append({
-            "box": [
-                float(x1 * orig_w),
-                float(y1 * orig_h),
-                float(x2 * orig_w),
-                float(y2 * orig_h),
-            ],
-            "score": float(scores[i]),
-            "label": int(labels[i]),
-        })
+        results.append(
+            {
+                "box": [
+                    float(x1 * orig_w),
+                    float(y1 * orig_h),
+                    float(x2 * orig_w),
+                    float(y2 * orig_h),
+                ],
+                "score": float(scores[i]),
+                "label": int(labels[i]),
+            }
+        )
 
     # Sort by score descending
     results.sort(key=lambda x: x["score"], reverse=True)
