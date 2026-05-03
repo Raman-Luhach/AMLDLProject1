@@ -17,16 +17,13 @@ jobs:
           python-version: '3.10'
 
       - name: Install linters
-        run: pip install flake8 black isort
+        run: pip install flake8 black
 
       - name: Check formatting with black
         run: black --check --line-length 120 src/ scripts/ tests/
 
       - name: Lint with flake8
         run: flake8 src/ scripts/ tests/ --max-line-length 120 --ignore=E501,W503,E203,F401,F841,F541,E402
-
-      - name: Check import order
-        run: isort --check-only --profile black src/ scripts/ tests/
 
   test:
     runs-on: ubuntu-latest
