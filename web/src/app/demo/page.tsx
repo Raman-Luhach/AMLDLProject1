@@ -20,7 +20,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-type ModelType = "yolact" | "hogsvm";
+type ModelType = "yolact" | "hogsvm" | "hybrid";
 
 interface Detection {
   box: [number, number, number, number];
@@ -37,18 +37,27 @@ interface InferenceResult {
   model?: string;
 }
 
-const MODEL_INFO: Record<ModelType, { name: string; tag: string; desc: string; endpoint: string }> = {
+const MODEL_INFO: Record<ModelType, { name: string; tag: string; desc: string; endpoint: string; color: string }> = {
   yolact: {
     name: "YOLACT",
     tag: "Deep Learning",
     desc: "MobileNetV3 + FPN + CBAM + Soft-NMS",
     endpoint: "/api/inference",
+    color: "blue",
+  },
+  hybrid: {
+    name: "Hybrid",
+    tag: "ML + DL Fusion",
+    desc: "YOLACT + GMM + KDE Spatial Reasoning",
+    endpoint: "/api/inference-hybrid",
+    color: "purple",
   },
   hogsvm: {
     name: "HOG + SVM",
     tag: "Classical ML",
     desc: "HOG features + Linear SVM + Sliding Window",
     endpoint: "/api/inference-baseline",
+    color: "amber",
   },
 };
 
@@ -176,7 +185,7 @@ export default function DemoPage() {
     setResult(null);
     setResultImage(null);
     setError(null);
-    setConfidenceThreshold(0.1);
+    setConfidenceThreshold(0.25);
     const url = URL.createObjectURL(f);
     setPreview(url);
   }, []);
@@ -185,7 +194,7 @@ export default function DemoPage() {
     setResult(null);
     setResultImage(null);
     setError(null);
-    setConfidenceThreshold(0.1);
+    setConfidenceThreshold(0.25);
     setPreview(src);
 
     // Convert to File for the API
@@ -246,7 +255,7 @@ export default function DemoPage() {
     setResult(null);
     setResultImage(null);
     setError(null);
-    setConfidenceThreshold(0.1);
+    setConfidenceThreshold(0.25);
   };
 
   const openFullscreen = () => {
@@ -345,6 +354,24 @@ export default function DemoPage() {
                 <div className="font-medium">YOLACT</div>
                 <div className={`text-[10px] ${selectedModel === "yolact" ? "text-blue-600" : "text-zinc-400"}`}>
                   Deep Learning
+                </div>
+              </div>
+            </button>
+            <button
+              onClick={() => { setSelectedModel("hybrid"); setResult(null); setResultImage(null); }}
+              className={`
+                flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-medium transition-all
+                ${selectedModel === "hybrid"
+                  ? "bg-white text-zinc-900 shadow-sm border border-zinc-200"
+                  : "text-zinc-500 hover:text-zinc-700"
+                }
+              `}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <div className="text-left">
+                <div className="font-medium">Hybrid</div>
+                <div className={`text-[10px] ${selectedModel === "hybrid" ? "text-purple-600" : "text-zinc-400"}`}>
+                  ML + DL Fusion
                 </div>
               </div>
             </button>
@@ -458,10 +485,12 @@ export default function DemoPage() {
                     {resultImage && result && (
                       <div className="absolute top-3 left-3">
                         <span className={`
-                          text-xs font-medium px-2.5 py-1 rounded-lg backdrop-blur
-                          ${result.model === "YOLACT"
-                            ? "bg-blue-600/80 text-white"
-                            : "bg-amber-500/80 text-white"
+                          text-xs font-medium px-2.5 py-1 rounded-lg backdrop-blur text-white
+                          ${selectedModel === "yolact"
+                            ? "bg-blue-600/80"
+                            : selectedModel === "hybrid"
+                            ? "bg-purple-600/80"
+                            : "bg-amber-500/80"
                           }
                         `}>
                           {result.model}
@@ -511,6 +540,8 @@ export default function DemoPage() {
                     flex-1 inline-flex items-center justify-center gap-2 text-white px-6 py-3 rounded-xl font-medium text-sm transition-colors disabled:opacity-50 shadow-sm
                     ${selectedModel === "yolact"
                       ? "bg-zinc-900 hover:bg-zinc-800"
+                      : selectedModel === "hybrid"
+                      ? "bg-purple-600 hover:bg-purple-700"
                       : "bg-amber-600 hover:bg-amber-700"
                     }
                   `}
@@ -522,7 +553,7 @@ export default function DemoPage() {
                     </>
                   ) : (
                     <>
-                      {selectedModel === "yolact" ? <Brain className="w-4 h-4" /> : <ScanLine className="w-4 h-4" />}
+                      {selectedModel === "yolact" ? <Brain className="w-4 h-4" /> : selectedModel === "hybrid" ? <SlidersHorizontal className="w-4 h-4" /> : <ScanLine className="w-4 h-4" />}
                       Run {modelInfo.name}
                     </>
                   )}
