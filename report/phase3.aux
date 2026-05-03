@@ -1,0 +1,130 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{goldman2019sku110k}
+\citation{goldman2019sku110k}
+\citation{bolya2019yolact}
+\citation{howard2019mobilenetv3}
+\citation{woo2018cbam}
+\citation{bodla2017softnms}
+\citation{goldman2019sku110k}
+\citation{he2017maskrcnn}
+\citation{bolya2019yolact}
+\citation{woo2018cbam}
+\citation{lin2017fpn}
+\citation{bodla2017softnms}
+\citation{lin2017focal}
+\citation{dalal2005hog}
+\citation{zhang2017mixup}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:intro}{{I}{1}{Introduction}{section.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{1}{section.2}\protected@file@percent }
+\newlabel{sec:related}{{II}{1}{Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}Dense Object Detection}{1}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Attention Mechanisms}{1}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Post-Processing for Dense Detection}{1}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}Classical Feature Extraction}{1}{subsection.2.4}\protected@file@percent }
+\citation{dalal2005hog}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Distribution of object count per image in SKU-110K. The majority of images contain 80--180 objects, with outliers exceeding 400.}}{2}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:eda_density}{{1}{2}{Distribution of object count per image in SKU-110K. The majority of images contain 80--180 objects, with outliers exceeding 400}{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Dataset Analysis}{2}{section.3}\protected@file@percent }
+\newlabel{sec:dataset}{{III}{2}{Dataset Analysis}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}SKU-110K Overview}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Exploratory Data Analysis}{2}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Methodology}{2}{section.4}\protected@file@percent }
+\newlabel{sec:method}{{IV}{2}{Methodology}{section.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Pairwise IoU distribution among neighboring boxes, demonstrating the high overlap characteristic of dense shelf arrangements.}}{2}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:eda_iou}{{2}{2}{Pairwise IoU distribution among neighboring boxes, demonstrating the high overlap characteristic of dense shelf arrangements}{figure.caption.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces K-means clustering of ground truth box dimensions for anchor optimization. Clusters reveal dominant small-box aspect ratios.}}{2}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:anchor_analysis}{{3}{2}{K-means clustering of ground truth box dimensions for anchor optimization. Clusters reveal dominant small-box aspect ratios}{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Phase 1: Classical ML Baseline (HOG+SVM)}{2}{subsection.4.1}\protected@file@percent }
+\newlabel{sec:phase1}{{\mbox  {IV-A}}{2}{Phase 1: Classical ML Baseline (HOG+SVM)}{subsection.4.1}{}}
+\citation{bolya2019yolact}
+\citation{howard2019mobilenetv3}
+\citation{lin2017fpn}
+\citation{woo2018cbam}
+\citation{bodla2017softnms}
+\citation{zhang2017mixup}
+\citation{lin2017focal}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces HOG feature visualization showing gradient magnitude and orientation patterns that capture product boundaries and shelf structure.}}{3}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:hog_features}{{4}{3}{HOG feature visualization showing gradient magnitude and orientation patterns that capture product boundaries and shelf structure}{figure.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Phase 1 architecture: HOG feature extraction followed by SVM classification in a sliding window framework.}}{3}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:arch_phase1}{{5}{3}{Phase 1 architecture: HOG feature extraction followed by SVM classification in a sliding window framework}{figure.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Phase 2: Deep Learning (YOLACT with MobileNetV3)}{3}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:phase2}{{\mbox  {IV-B}}{3}{Phase 2: Deep Learning (YOLACT with MobileNetV3)}{subsection.4.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Phase 2 architecture: YOLACT with MobileNetV3 backbone, FPN, CBAM attention, and Soft-NMS post-processing.}}{3}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:arch_phase2}{{6}{3}{Phase 2 architecture: YOLACT with MobileNetV3 backbone, FPN, CBAM attention, and Soft-NMS post-processing}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Phase 3: Hybrid Neuro-Symbolic Fusion}{3}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:phase3}{{\mbox  {IV-C}}{3}{Phase 3: Hybrid Neuro-Symbolic Fusion}{subsection.4.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Phase 3 architecture: Hybrid detector with spatial reasoning engine providing density-aware feedback to the YOLACT detection pipeline.}}{4}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:arch_phase3}{{7}{4}{Phase 3 architecture: Hybrid detector with spatial reasoning engine providing density-aware feedback to the YOLACT detection pipeline}{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Experimental Results}{4}{section.5}\protected@file@percent }
+\newlabel{sec:results}{{V}{4}{Experimental Results}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Phase 1: Classical Baseline Results}{4}{subsection.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Phase 1: HOG+SVM Baseline Performance}}{4}{table.caption.8}\protected@file@percent }
+\newlabel{tab:baseline}{{I}{4}{Phase 1: HOG+SVM Baseline Performance}{table.caption.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces HOG+SVM baseline detections. High precision but extremely sparse recall due to sliding window limitations in dense scenes.}}{4}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:baseline_det}{{8}{4}{HOG+SVM baseline detections. High precision but extremely sparse recall due to sliding window limitations in dense scenes}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Phase 2: YOLACT Training and Evaluation}{4}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}1}Training Convergence}{4}{subsubsection.5.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}2}Detection Quality Analysis}{4}{subsubsection.5.2.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces YOLACT Training Progression (Selected Epochs)}}{5}{table.caption.10}\protected@file@percent }
+\newlabel{tab:training}{{II}{5}{YOLACT Training Progression (Selected Epochs)}{table.caption.10}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Phase 2: YOLACT Detection Metrics (200 Val Images)}}{5}{table.caption.11}\protected@file@percent }
+\newlabel{tab:eval_metrics}{{III}{5}{Phase 2: YOLACT Detection Metrics (200 Val Images)}{table.caption.11}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}3}Error Analysis by Density}{5}{subsubsection.5.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}4}Model Interpretability}{5}{subsubsection.5.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-B}5}Robustness Analysis}{5}{subsubsection.5.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Phase 3: Hybrid Detector Results}{5}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-C}1}Hybrid Training}{5}{subsubsection.5.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-C}2}Ablation Study}{5}{subsubsection.5.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Detection Error Analysis by Object Density}}{5}{table.caption.12}\protected@file@percent }
+\newlabel{tab:error_density}{{IV}{5}{Detection Error Analysis by Object Density}{table.caption.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Detection results on validation images showing predicted bounding boxes overlaid on dense retail shelf scenes.}}{5}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:detection_samples}{{9}{5}{Detection results on validation images showing predicted bounding boxes overlaid on dense retail shelf scenes}{figure.caption.13}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {V-C}3}Per-Density Ablation Analysis}{5}{subsubsection.5.3.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Precision-recall curve for the YOLACT detector at IoU threshold 0.5.}}{6}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:pr_curve}{{10}{6}{Precision-recall curve for the YOLACT detector at IoU threshold 0.5}{figure.caption.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Grad-CAM attention maps showing model focus regions. Warm colors indicate high activation corresponding to product boundaries.}}{6}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:gradcam}{{11}{6}{Grad-CAM attention maps showing model focus regions. Warm colors indicate high activation corresponding to product boundaries}{figure.caption.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Deployment Analysis}{6}{section.6}\protected@file@percent }
+\newlabel{sec:deployment}{{VI}{6}{Deployment Analysis}{section.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Discussion}{6}{section.7}\protected@file@percent }
+\newlabel{sec:discussion}{{VII}{6}{Discussion}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}Phase Progression Analysis}{6}{subsection.7.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Robustness Analysis: AP@0.50 Under Corruptions}}{6}{table.caption.16}\protected@file@percent }
+\newlabel{tab:robustness}{{V}{6}{Robustness Analysis: AP@0.50 Under Corruptions}{table.caption.16}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Robustness analysis showing AP stability under Gaussian noise, blur, and brightness perturbations at increasing severity levels.}}{6}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:robustness}{{12}{6}{Robustness analysis showing AP stability under Gaussian noise, blur, and brightness perturbations at increasing severity levels}{figure.caption.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Soft-NMS as a Critical Component}{6}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-C}}Limitations and Future Work}{6}{subsection.7.3}\protected@file@percent }
+\bibcite{goldman2019sku110k}{1}
+\bibcite{bolya2019yolact}{2}
+\bibcite{howard2019mobilenetv3}{3}
+\bibcite{he2017maskrcnn}{4}
+\bibcite{woo2018cbam}{5}
+\bibcite{bodla2017softnms}{6}
+\bibcite{lin2017fpn}{7}
+\bibcite{lin2017focal}{8}
+\bibcite{dalal2005hog}{9}
+\bibcite{zhang2017mixup}{10}
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Hybrid Detector Training (Stage 3)}}{7}{table.caption.18}\protected@file@percent }
+\newlabel{tab:hybrid_training}{{VI}{7}{Hybrid Detector Training (Stage 3)}{table.caption.18}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {VII}{\ignorespaces Ablation Study Results (588 Val Images)}}{7}{table.caption.19}\protected@file@percent }
+\newlabel{tab:ablation}{{VII}{7}{Ablation Study Results (588 Val Images)}{table.caption.19}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Conclusion}{7}{section.8}\protected@file@percent }
+\newlabel{sec:conclusion}{{VIII}{7}{Conclusion}{section.8}{}}
+\@writefile{toc}{\contentsline {section}{References}{7}{section*.25}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {VIII}{\ignorespaces Per-Density Analysis (Full Hybrid)}}{7}{table.caption.20}\protected@file@percent }
+\newlabel{tab:density_ablation}{{VIII}{7}{Per-Density Analysis (Full Hybrid)}{table.caption.20}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Ablation study: mAP@0.5 across model variants. Hard-NMS shows catastrophic performance degradation in dense scenes.}}{7}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:ablation_chart}{{13}{7}{Ablation study: mAP@0.5 across model variants. Hard-NMS shows catastrophic performance degradation in dense scenes}{figure.caption.21}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Component contribution analysis showing delta mAP when each component is removed from the full hybrid model.}}{8}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:component_contribution}{{14}{8}{Component contribution analysis showing delta mAP when each component is removed from the full hybrid model}{figure.caption.22}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Per-density performance analysis across object count buckets.}}{8}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:density_analysis}{{15}{8}{Per-density performance analysis across object count buckets}{figure.caption.23}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IX}{\ignorespaces Inference Backend Comparison}}{8}{table.caption.24}\protected@file@percent }
+\newlabel{tab:deployment}{{IX}{8}{Inference Backend Comparison}{table.caption.24}{}}
+\gdef \@abspage@last{8}
