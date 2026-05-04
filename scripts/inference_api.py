@@ -135,7 +135,7 @@ def main():
     # Scale boxes to original image dimensions
     results = []
     for i in range(len(boxes)):
-        if scores[i] < 0.05:
+        if scores[i] < 0.25:
             continue
         x1, y1, x2, y2 = boxes[i]
         results.append(
