@@ -272,7 +272,7 @@ class HybridTrainer:
 
             # MixUp augmentation
             if self.use_mixup and len(images) > 1:
-                images, targets = mixup_batch(images, targets, alpha=self.mixup_alpha)
+                images, targets, _, _ = mixup_batch(images, targets, alpha=self.mixup_alpha)
 
             # Forward pass
             optimizer.zero_grad()
