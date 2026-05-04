@@ -129,9 +129,16 @@ class SpatialReasoningEngine:
         self.gmm.fit(centers_y)
         logger.info("GMM fitted with %d row components (BIC-selected)", best_n)
 
-        # Fit KDE on (x, y) centers
-        self.kde.fit(centers_xy)
-        logger.info("KDE fitted on %d center points", len(centers_xy))
+        # Fit KDE on (x, y) centers — subsample to cap inference cost
+        max_kde_samples = 5000
+        if len(centers_xy) > max_kde_samples:
+            rng = np.random.RandomState(42)
+            idx = rng.choice(len(centers_xy), max_kde_samples, replace=False)
+            kde_data = centers_xy[idx]
+        else:
+            kde_data = centers_xy
+        self.kde.fit(kde_data)
+        logger.info("KDE fitted on %d center points (subsampled from %d)", len(kde_data), len(centers_xy))
 
         # Store statistics for feature computation
         self._mean_objects_per_image = np.mean(objects_per_image)

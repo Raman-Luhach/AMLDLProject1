@@ -184,7 +184,7 @@ class HybridDetector(nn.Module):
         spatial_features = self.spatial_engine.compute_spatial_features(boxes, image_size=self._input_size)
 
         # Generate density at a reduced resolution (P3 size)
-        p3_size = self._input_size // 8  # stride 8
+        p3_size = self._input_size // 16  # stride 16
         density_field = self.spatial_engine.generate_density_field(
             boxes, shape=(p3_size, p3_size), image_size=self._input_size
         )
