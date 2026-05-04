@@ -16,7 +16,8 @@ weights/*.onnx
 !weights/.gitkeep
 
 # Training checkpoints and deployment models (too large for git)
-results/training/checkpoints/*.pth
+# results/training/checkpoints/*.pth
+!results/training/checkpoints/best_model.pth
 results/deployment/*.onnx
 results/deployment/*.onnx.data
 *.tar.gz
