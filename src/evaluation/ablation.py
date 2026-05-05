@@ -176,6 +176,9 @@ class AblationFramework:
                     per_image_density.append(n_gt)
 
                     pred_boxes = det["boxes"].cpu().numpy()
+                    # Detection boxes are normalized [0,1]; GT boxes are in pixel coords
+                    input_size = images.size(2)  # H == W == input_size
+                    pred_boxes = pred_boxes * input_size
                     pred_scores = det["scores"].cpu().numpy()
 
                     all_predictions.append(
