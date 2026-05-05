@@ -56,11 +56,11 @@ training:
   val_interval: 2
 
   # Stage 3a: Frozen backbone
-  frozen_epochs: 10
+  frozen_epochs: 5
   frozen_lr: 0.001
 
   # Stage 3b: Joint fine-tuning
-  finetune_epochs: 5
+  finetune_epochs: 2
   finetune_lr: 0.0001  # LR/10
 
   # Checkpointing
